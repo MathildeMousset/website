@@ -1,0 +1,37 @@
+---
+title: "Research"
+author: "Mathilde Mousset"
+date: "25 janvier 2019"
+output: html_document
+draft: TRUE
+---
+
+
+# To do:
+- update text for past things
+- add pictures
+- add a bit about MEDICAGO
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+I am interested in subjects that border ecology and evolution: adaptation, mating systems evolution, plant/insects interactions, speciation, and coevolution.
+
+During my PhD, I focused on the evolution of mating system, adaptation and the mutual influences of both processes. I have been studying different aspects of this interaction using a hypertolerant, hyperaccumulator plant species, Noccaea caerulescens. This species grows on former mines and non-contaminated soils in Europe and in particularly in the Cévennes, and it is an excellent model to study the interaction of local adaptation in a heterogeneous environment and mating system.
+
+Firstly, I finely characterized N. caerulescens mating system in natural population, and see how metal pollution affects the variation of mating system in the Cévennes region. I showed that contrary to a couple of classical results (Antonovics 1968), in this system, metallicolous populations have lower self-fertilization rates than non-metallicolous populations (doi: 10.1093/aob/mcv191).
+
+I then tested our best potential factor potentially explaining the variation of mating system in natural populations: plant density. In two different measures, with two different methods, density seems to have no or only a weak effect on self-fertilization rates in Noccaea caerulescens (article in prep).
+
+In a second project, I test the interaction between inbreeding depression, stress and the history of adaptation to a given environment using Noccaea caerulescens. Inbreeding depression is known to vary with environment and, sometimes, stress. Both experimental data (Long et al 2013) and theoretical models (Ronce et al 2009) stress the importance of the effect of the history of selection and adaptation in populations on the magnitude of inbreeding depression. Since we have populations of Noccaea caerulescens that are adapted to different levels of pollution, since different levels of pollution impose differential stress on the two ecotypes (strong pollution is not good for non-metallicolous plants) and since the species is self-compatible, it is an excellent system to test predictions on the interaction of inbreeding depression, stress and local adaptation (in prep).
+
+#Poster presented at ESEB meeting 2015 on the preliminary analysis: Mousset_ESEB_2015
+
+ 
+
+Finally, I study how temporal variation in mating system affects the probability of adaptation of a population facing an environmental change using simulations. This work is inspired by models by Glémin & Ronfort 2013, and Peischl & Kirkpatrick 2012. Poster_ESEB_2013
+
+The full Thesis Dissertation can be found [here](https://tel.archives-ouvertes.fr/tel-01684833/).
