@@ -14,7 +14,7 @@ tags:
 
 
 <p>This week, I decided to try the <a href="https://github.com/rfordatascience/tidytuesday">#Tidytuesday</a> twitter challenge. Every week, <a href="https://twitter.com/thomas_mock?lang=en">Thomas Mock</a> provides a mostly clean dataset for the community to analyse.</p>
-<p><a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-15">This week’s dataset</a> was data about space launches across the world. There was one table about agencies responsible for the launches, and a table about the launches. This data was associated with an <a href="https://www.economist.com/graphic-detail/2018/10/18/the-space-race-is-dominated-by-new-contenders">article from The Economist</a>, with a truly beautiful infographics.</p>
+<p><a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-15">This week’s dataset</a> was data about space launches across the world. There was one table about agencies responsible for the launches, and a table about the launches. This data was associated with an <a href="https://www.economist.com/graphic-detail/2018/10/18/the-space-race-is-dominated-by-new-contenders">article from The Economist</a>, with a truly beautiful info-graphics.</p>
 <p>I watched part of <a href="https://t.co/5rBN2FPeB1">Dave Robinson’s</a> video on <a href="https://www.youtube.com/watch?v=ZyPrP_Yo1BA">how he tackled this</a>. To be honest, I have not yet finished watching it, because I was so earnest to try some of the data cleaning tricks he showed that I began coding after about half of it. But I will watch the rest, to see what else he did.</p>
 <p><strong>New tools I wanted to learn:</strong></p>
 <ul>
@@ -42,7 +42,7 @@ launches &lt;- read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/
 <h1>Preparing the data</h1>
 <p>I focused mostly on the <code>launches</code> table. It was already tidy, so I did not perform great reshaping. However, I wanted to tweak some columns a bit.</p>
 <p>First, I used the <code>lubridate</code> package to get the date into a nice, tidy date format. Here, the <code>ymd()</code> function takes the <code>launch_date</code> and turns it into a year-month-day date format.</p>
-<p>From then, I can use the <code>month()</code> function to obtain the month of launch (with the full name of month instead of a number), the <code>weekdays()</code> function to obtain the day of the week (begining on the Monday), and the <code>week()</code> function to obtain the number of the week in the year.</p>
+<p>From then, I can use the <code>month()</code> function to obtain the month of launch (with the full name of month instead of a number), the <code>weekdays()</code> function to obtain the day of the week (beginning on the Monday), and the <code>week()</code> function to obtain the number of the week in the year.</p>
 <pre class="r"><code># Get better date format in launches
 launches &lt;- launches %&gt;% 
   mutate(launch_date  = ymd(launch_date),
@@ -409,7 +409,7 @@ launches$state_name %&gt;% unique() %&gt;% kable()</code></pre>
    scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
   my_theme</code></pre>
 <p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-18-1.png" width="960" /></p>
-<p>While launches were performed by state agencies for a long time, the pravate sector operates most of the launches nowadays in Europe and in the States.</p>
+<p>While launches were performed by state agencies for a long time, the private sector operates most of the launches nowadays in Europe and in the States.</p>
 </div>
 <div id="date-of-launches" class="section level1">
 <h1>Date of launches</h1>

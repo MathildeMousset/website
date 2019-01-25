@@ -104,7 +104,9 @@ Unfortunately, is it *so everywhere* that it is a bit hard to know where to begi
 
 Text for example. For me text used to be, essentially, factors. I could not really understand all the hype around `StringAsFactors==FALSE`. When I saw that a dataset had been recently published on #Tidytuesday with the recent tweets associated with the hashtag, my first thought was "What the hell am I supposed to do with *tweets*?". My second, of course, was: 
 
+<center>
 ![](https://media.giphy.com/media/81MHl1DY9kxMI/giphy.gif)
+</center>
 
 I had not realized that it was so easy to dive in text analysis in R. So all types of data means that I have to learn all kinds of new cool tools.
 

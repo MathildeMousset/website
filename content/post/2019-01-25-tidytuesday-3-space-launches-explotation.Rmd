@@ -14,7 +14,7 @@ tags:
 This week, I decided to try the [#Tidytuesday](https://github.com/rfordatascience/tidytuesday) twitter challenge. Every week, [Thomas Mock](https://twitter.com/thomas_mock?lang=en) provides a mostly clean dataset for the community to analyse. 
 
 
-[This week's dataset](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-15) was data about space launches across the world. There was one table about agencies responsible for the launches, and a table about the launches. This data was associated with an [article from The Economist](https://www.economist.com/graphic-detail/2018/10/18/the-space-race-is-dominated-by-new-contenders), with a truly beautiful infographics.
+[This week's dataset](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-15) was data about space launches across the world. There was one table about agencies responsible for the launches, and a table about the launches. This data was associated with an [article from The Economist](https://www.economist.com/graphic-detail/2018/10/18/the-space-race-is-dominated-by-new-contenders), with a truly beautiful info-graphics.
 
 I watched part of [Dave Robinson's](https://t.co/5rBN2FPeB1) video on [how he tackled this](https://www.youtube.com/watch?v=ZyPrP_Yo1BA). To be honest, I have not yet finished watching it, because I was so earnest to try some of the data cleaning tricks he showed that I began coding after about half of it. But I will watch the rest, to see what else he did.
 
@@ -63,7 +63,7 @@ I focused mostly on the `launches` table. It was already tidy, so I did not perf
 
 First, I used the `lubridate` package to get the date into a nice, tidy date format. Here, the `ymd()` function takes the `launch_date` and turns it into a year-month-day date format.
 
-From then, I can use the `month()` function to obtain the month of launch (with the full name of month instead of a number), the `weekdays()` function to obtain the day of the week (begining on the Monday), and the `week()` function to obtain the number of the week in the year.
+From then, I can use the `month()` function to obtain the month of launch (with the full name of month instead of a number), the `weekdays()` function to obtain the day of the week (beginning on the Monday), and the `week()` function to obtain the number of the week in the year.
 
 ```{r}
 # Get better date format in launches
@@ -381,7 +381,7 @@ launches %>%
 ```
 
 
-While launches were performed by state agencies for a long time, the pravate sector operates most of the launches nowadays in Europe and in the States.
+While launches were performed by state agencies for a long time, the private sector operates most of the launches nowadays in Europe and in the States.
 
 # Date of launches
 
