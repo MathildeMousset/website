@@ -161,7 +161,7 @@ launches %>%
 
 Let's have a look at the launches across time per country.  
 
-```{r, fig.height= 10, fig.width=10}
+```{r, fig.height= 10, fig.width=8}
 launches %>% 
   count(launch_year, state_name, state_bloc) %>% 
   ggplot(aes(x = launch_year, y = n)) +

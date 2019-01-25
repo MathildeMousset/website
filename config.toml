@@ -1,4 +1,4 @@
-baseurl = "/"
+baseurl = "https://tender-curie-5b83bc.netlify.com/"
 languageCode = "en-us"
 title = "The wandering stat user"
 theme = "hugo-lithium"
