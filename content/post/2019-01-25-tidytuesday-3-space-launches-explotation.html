@@ -1,0 +1,456 @@
+---
+title: '#Tidytuesday 3: Space launches explotation'
+author: Mathilde Mousset
+date: '2019-01-25'
+slug: tidytuesday-3-space-launches-explotation
+categories: []
+tags:
+  - R
+  - data visualisation
+  - twitter
+  - '#TidyTuesday'
+---
+
+
+
+<p>This week, I decided to try the <a href="https://github.com/rfordatascience/tidytuesday">#Tidytuesday</a> twitter challenge. Every week, <a href="https://twitter.com/thomas_mock?lang=en">Thomas Mock</a> provides a mostly clean dataset for the community to analyse.</p>
+<p><a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-15">This week’s dataset</a> was data about space launches across the world. There was one table about agencies responsible for the launches, and a table about the launches. This data was associated with an <a href="https://www.economist.com/graphic-detail/2018/10/18/the-space-race-is-dominated-by-new-contenders">article from The Economist</a>, with a truly beautiful infographics.</p>
+<p>I watched part of <a href="https://t.co/5rBN2FPeB1">Dave Robinson’s</a> video on <a href="https://www.youtube.com/watch?v=ZyPrP_Yo1BA">how he tackled this</a>. To be honest, I have not yet finished watching it, because I was so earnest to try some of the data cleaning tricks he showed that I began coding after about half of it. But I will watch the rest, to see what else he did.</p>
+<p><strong>New tools I wanted to learn:</strong></p>
+<ul>
+<li><p>the <code>countrycode</code> package, to go from country codes to full names,</p></li>
+<li><p>Some functions from the <code>forcats</code> package. I have use this package before, but I had never used the <code>fct_collapse</code> and <code>fct_lump</code> functions.</p></li>
+</ul>
+<pre class="r"><code>theme_set(theme_light())
+
+my_theme &lt;- theme(plot.title         = element_text(size = 18,
+                                               face = &quot;bold&quot;),
+                  plot.subtitle = element_text(size = 16),
+                  axis.title    = element_text(size = 15,
+                                               face = &quot;bold&quot;,
+                                               vjust = 0.1),
+                  axis.text     = element_text(size = 15),
+                  legend.title  = element_text(size = 15, 
+                                               face = &quot;bold&quot;),
+                  legend.text   = element_text(size = 12),
+                strip.text      = element_text(size = 15, 
+                                               face = &quot;bold&quot;))
+
+# Import data from github
+launches &lt;- read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-01-15/launches.csv&quot;)</code></pre>
+<div id="preparing-the-data" class="section level1">
+<h1>Preparing the data</h1>
+<p>I focused mostly on the <code>launches</code> table. It was already tidy, so I did not perform great reshaping. However, I wanted to tweak some columns a bit.</p>
+<p>First, I used the <code>lubridate</code> package to get the date into a nice, tidy date format. Here, the <code>ymd()</code> function takes the <code>launch_date</code> and turns it into a year-month-day date format.</p>
+<p>From then, I can use the <code>month()</code> function to obtain the month of launch (with the full name of month instead of a number), the <code>weekdays()</code> function to obtain the day of the week (begining on the Monday), and the <code>week()</code> function to obtain the number of the week in the year.</p>
+<pre class="r"><code># Get better date format in launches
+launches &lt;- launches %&gt;% 
+  mutate(launch_date  = ymd(launch_date),
+         launch_month = month(launch_date, 
+                                label =  TRUE,
+                                abb   = FALSE),
+         launch_weekday  = weekdays(launch_date),
+         launch_week_num = week(launch_date))</code></pre>
+<p>I then tried to improve the country names. Some of the codes are familiar, some are not, I had to do a little search.</p>
+<pre><code>##  [1] &quot;BR&quot;     &quot;CN&quot;     &quot;CYM&quot;    &quot;F&quot;      &quot;I&quot;      &quot;I-ELDO&quot; &quot;I-ESA&quot; 
+##  [8] &quot;IL&quot;     &quot;IN&quot;     &quot;IR&quot;     &quot;J&quot;      &quot;KP&quot;     &quot;KR&quot;     &quot;RU&quot;    
+## [15] &quot;SU&quot;     &quot;UK&quot;     &quot;US&quot;</code></pre>
+<p>I used the <code>countrycode</code> package to obtain the full names of the countries. Since the <code>countrycode()</code> function takes ISO codes, I manually changed the provided code to ISO when necessary. I also collapsed the Soviet Union and current Russia into a Russia state.</p>
+<p>The <code>fct_collapse()</code> function allowed us to collapse the levels of a factor into a new level. Here I collapsed “SU”&quot; and “RU”&quot; into “RU”&quot; for example, and changed the name of some factors.</p>
+<pre class="r"><code>launches$state_code_clean &lt;- fct_collapse(launches$state_code,
+    &quot;RU&quot; = c(&quot;SU&quot;, &quot;RU&quot;),
+    &quot;FR&quot; = c(&quot;F&quot;, &quot;I-ELDO&quot;, &quot;I-ESA&quot;),
+    &quot;JP&quot; = &quot;J&quot;,
+    &quot;IT&quot; = &quot;I&quot;,
+    &quot;KY&quot; = &quot;CYM&quot;,
+    &quot;GB&quot; = &quot;UK&quot;) </code></pre>
+<p>Now that I made sure that all my country codes follow the ISO2c norm, I can use the <code>countrycode</code> function to obtain the full country names.</p>
+<pre class="r"><code>launches$state_name &lt;- countrycode(launches$state_code_clean,
+                                   &quot;iso2c&quot;, 
+                                   &quot;country.name&quot;)
+
+launches$state_name %&gt;% unique() %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">x</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">United States</td>
+</tr>
+<tr class="even">
+<td align="left">France</td>
+</tr>
+<tr class="odd">
+<td align="left">Brazil</td>
+</tr>
+<tr class="even">
+<td align="left">China</td>
+</tr>
+<tr class="odd">
+<td align="left">Italy</td>
+</tr>
+<tr class="even">
+<td align="left">Russia</td>
+</tr>
+<tr class="odd">
+<td align="left">Iran</td>
+</tr>
+<tr class="even">
+<td align="left">Israel</td>
+</tr>
+<tr class="odd">
+<td align="left">Japan</td>
+</tr>
+<tr class="even">
+<td align="left">India</td>
+</tr>
+<tr class="odd">
+<td align="left">South Korea</td>
+</tr>
+<tr class="even">
+<td align="left">North Korea</td>
+</tr>
+<tr class="odd">
+<td align="left">United Kingdom</td>
+</tr>
+<tr class="even">
+<td align="left">Cayman Islands</td>
+</tr>
+</tbody>
+</table>
+<p>Sweet.</p>
+<p>Now, that we have some human-readable names, let’s have a look at how many launches each country performed.</p>
+<pre class="r"><code>launches %&gt;% 
+  count(state_name, sort = TRUE) %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">state_name</th>
+<th align="right">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Russia</td>
+<td align="right">3178</td>
+</tr>
+<tr class="even">
+<td align="left">United States</td>
+<td align="right">1716</td>
+</tr>
+<tr class="odd">
+<td align="left">France</td>
+<td align="right">307</td>
+</tr>
+<tr class="even">
+<td align="left">China</td>
+<td align="right">302</td>
+</tr>
+<tr class="odd">
+<td align="left">Japan</td>
+<td align="right">115</td>
+</tr>
+<tr class="even">
+<td align="left">India</td>
+<td align="right">65</td>
+</tr>
+<tr class="odd">
+<td align="left">Israel</td>
+<td align="right">10</td>
+</tr>
+<tr class="even">
+<td align="left">Italy</td>
+<td align="right">9</td>
+</tr>
+<tr class="odd">
+<td align="left">Iran</td>
+<td align="right">8</td>
+</tr>
+<tr class="even">
+<td align="left">North Korea</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="left">Cayman Islands</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="left">South Korea</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="left">Brazil</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">United Kingdom</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<p>We can see that there is a big drop between India and Israel. I will follow Dave Robinson lead here and create a variable with the six first countries, and pool the rest in “Others”. To do this, I use the <code>fct_lump</code> function.</p>
+<pre class="r"><code>launches &lt;- launches %&gt;%  
+  mutate(state_name_short = fct_lump(state_name, 6)) %&gt;%
+  replace_na(list(state_name_short = &quot;Other&quot;)) </code></pre>
+<p>Personally, I also like the idea of pooling countries by geographical area. It does not change much for the state and Russia, but I think it helps having a better picture about Europe and Asia.</p>
+<p>I also change the levels of the <code>category</code> column to make them more understandable.</p>
+<pre class="r"><code>launches &lt;- launches %&gt;% 
+  mutate(state_bloc = fct_collapse(state_code_clean,
+                                   &quot;URSS&quot;   = &quot;RU&quot;,
+                                   &quot;Europe&quot; = c(&quot;FR&quot;, &quot;IT&quot;, &quot;GB&quot;, &quot;KY&quot;),
+                                   &quot;North_america&quot;     = &quot;US&quot;,
+                                   &quot;Asia&quot;   = c(&quot;CN&quot;, &quot;JP&quot;, &quot;IN&quot;, &quot;KR&quot;, &quot;KP&quot;),
+                                   &quot;South_america&quot; = &quot;BR&quot;,
+                                   &quot;Middle_east&quot; = c(&quot;IR&quot;, &quot;IL&quot;)))  %&gt;% 
+  mutate(category = fct_recode(category,
+                                Success = &quot;O&quot;,
+                                Failure = &quot;F&quot;))</code></pre>
+</div>
+<div id="lauches-per-geographic-area-and-states" class="section level1">
+<h1>Lauches per geographic area and states</h1>
+<pre class="r"><code>launches %&gt;% 
+  count(state_bloc, sort = TRUE) %&gt;% 
+  ggplot(aes(x = state_bloc, y = n)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  labs(title = &quot;Number of lauches per state blocs&quot;,
+       x = &quot;&quot;,
+       y = &quot;Number of lauches&quot;) +
+   theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Let’s have a look at the launches across time per country.</p>
+<pre class="r"><code>launches %&gt;% 
+  count(launch_year, state_name, state_bloc) %&gt;% 
+  ggplot(aes(x = launch_year, y = n)) +
+  geom_line(size = 2) +
+  labs(title = &quot;Number of lauches per state&quot;,
+       x = &quot;&quot;,
+       y = &quot;Number of lauches&quot;) +
+  facet_wrap(~state_bloc, scales = &quot;free&quot;) +
+  facet_wrap(~state_name) +
+  theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+   scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-10-1.png" width="960" /></p>
+<p>It is not bad, but I will use the shortened list of country as Dave Robinson did to make comparisons between countries easier.</p>
+<pre class="r"><code>launches %&gt;% 
+  count(state_name_short, launch_year) %&gt;%
+  mutate(state_name_short = fct_reorder(state_name_short, -n, sum)) %&gt;% 
+  ggplot(aes(x = launch_year, y = n, 
+             colour = state_name_short)) +
+  geom_line(size = 1.5) +
+  labs(title = &quot;Number of lauches per state (short list)&quot;,
+       x = &quot;Year of launch&quot;,
+       y = &quot;Number of lauches&quot;,
+       colour = &quot;State&quot;) +
+  theme_minimal() +
+   theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+   scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>Lets have a look with the geographical blocs.</p>
+<pre class="r"><code>launches %&gt;% 
+  count(state_bloc, launch_year) %&gt;%
+  mutate(state_bloc = fct_reorder(state_bloc, -n, sum)) %&gt;% 
+  ggplot(aes(x = launch_year, y = n, 
+             colour = state_bloc)) +
+  geom_line(size = 1.5) +
+  labs(title = &quot;Number of lauches per state bloc&quot;,
+       subtitle = &quot;US and USSR dominated the early race, \nAsia is booming now&quot;,
+       x = &quot;Year of launch&quot;,
+       y = &quot;Number of lauches&quot;,
+       colour = &quot;State bloc&quot;) +
+  theme_minimal() +
+  theme(panel.grid = element_blank()) +
+   scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>I like how it is easier to see what’s happening in Asia.</p>
+<p>The United states began the space race, closely followed by Russia, which dominated the number of launches until the late nineties. After that, Russia and the US were stable and equivalent. In the early 2000, China, followed by India increased their shares of the launches.</p>
+</div>
+<div id="us-vs-russia" class="section level1">
+<h1>US vs Russia</h1>
+<p>Since for a long time the race was dominated by the US and Russia, let’s have a nice comparison graph between the two.</p>
+<pre class="r"><code>launches %&gt;% 
+  filter(state_name %in% c(&quot;United States&quot;, &quot;Russia&quot;)) %&gt;%
+   ggplot(aes(x = launch_year, fill = state_name)) +
+  geom_area(stat = &quot;bin&quot;, 
+            position = &quot;identity&quot;,
+            bins = 30, alpha = 0.6) +
+  scale_fill_manual(values = c(&quot;#999999&quot;, &quot;#E69F00&quot;)) +
+    theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+  labs(title = &quot;Space race: US vs Russia&quot;,
+       subtitle = &quot;Numer of launches per year in Russia and \nthe states&quot;,
+       x = &quot;Year of launches &quot;,
+       y = &quot;Number of launches&quot;,
+       fill = &quot;&quot;) +
+   scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+</div>
+<div id="success-vs-failure" class="section level1">
+<h1>Success vs Failure</h1>
+<p>We have the information on whether the launch was a success or a failure. let’s have a look at how the number of failures evolved though time.</p>
+<pre class="r"><code>launches %&gt;% 
+  count(category, launch_year) %&gt;% 
+  ggplot(aes(x = launch_year, y = n,
+             fill = category)) +
+  geom_bar(stat = &quot;identity&quot;, 
+            #position = &quot;identity&quot;,
+            ) +
+  scale_fill_manual(values = c(&quot;#999999&quot;, &quot;#E69F00&quot;)) +
+    theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+  labs(title = &quot;Number of successfull and failed launches accross time&quot;,
+       subtitle = &quot;It seems the number of failed launches \ndecreases with time&quot;,
+       x = &quot;Year of launches &quot;,
+       y = &quot;Number of launches&quot;,
+       fill = &quot;Launch outcome&quot;) +
+  scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-14-1.png" width="864" /></p>
+<p>Sweet. Let’s have a look by country, focusing on the countries that send most launches.</p>
+<pre class="r"><code>launches %&gt;% 
+  filter(state_name %in% c(&quot;China&quot;, &quot;France&quot;, &quot;Russia&quot;, &quot;United States&quot;)) %&gt;% 
+  count(category, launch_year, state_name_short) %&gt;% 
+  ggplot(aes(x = launch_year, y = n,
+             fill = category)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  facet_wrap(~state_name_short, nrow = 4) +
+  scale_fill_manual(values = c(&quot;#999999&quot;, &quot;#E69F00&quot;)) +
+    theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+  labs(title = &quot;Number of successfull and failed launches accross time&quot;,
+       subtitle = &quot;Per country&quot;,
+       x = &quot;Year of launches &quot;,
+       y = &quot;Number of launches&quot;,
+       fill = &quot;Launch outcome&quot;) +
+  scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-15-1.png" width="1152" /></p>
+<p>It’s nice, but I would have to have a look at the proportion of failed launches.</p>
+<pre class="r"><code>launches %&gt;% 
+  filter(state_name %in% c(&quot;China&quot;, &quot;France&quot;, &quot;Russia&quot;, &quot;United States&quot;)) %&gt;% 
+  group_by(state_name, launch_year) %&gt;% 
+  add_tally() %&gt;% 
+  add_count(category) %&gt;% 
+  distinct(state_bloc, launch_year, category, n, nn) %&gt;%  
+  mutate(proportion = nn / n) %&gt;% 
+  ggplot(aes(x = launch_year, y = proportion*100, 
+             fill = category)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  facet_wrap(~state_name, nrow = 4) +
+  labs(title = &quot;Space mastery increases with time&quot;,
+       subtitle = &quot;Countries experienced many failures in their early years. \nNowadays, lauches are mostly successfull&quot;,
+       x = &quot;Year of launch&quot;,
+       y = &quot;Percentage of lauches&quot;,
+       fill = &quot;Launch outcome&quot;) +
+  scale_fill_manual(values = c(&quot;#999999&quot;, &quot;#E69F00&quot;)) +
+    theme_minimal() +
+  theme_minimal() +
+   theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+  scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-16-1.png" width="960" /></p>
+</div>
+<div id="private-vs-public-lauches" class="section level1">
+<h1>Private vs public lauches</h1>
+<p>Now I wanted to see whether the launches were mostly made by states or by private companies, and how this varied with time.</p>
+<pre class="r"><code>launches %&gt;% 
+  filter(state_bloc != &quot;South_america&quot; &amp; state_bloc != &quot;Middle_east&quot;) %&gt;% 
+  ggplot(aes(x = launch_year, fill = agency_type) ) +
+  geom_histogram(bins = 62) + 
+  facet_wrap(vars(state_bloc), nrow = 4) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+    scale_fill_brewer(palette = &quot;Set1&quot;) +
+  labs(title = &quot;Who accounts for space launches in different blocs?&quot;,
+       subtitle = &quot;While in Europe and in the states the market has been recently privatised, \nstate still accounts for most lauches in Asia and Russia&quot;,
+       x = &quot;Year of launch&quot;,
+       y = &quot;Number of launches&quot;,
+       fill = &quot;Type of agency&quot;) +
+   scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-17-1.png" width="960" /></p>
+<pre class="r"><code>launches %&gt;% 
+  filter(state_bloc != &quot;South_america&quot; &amp; state_bloc != &quot;Middle_east&quot;) %&gt;% 
+  select(state_bloc, launch_year, agency_type) %&gt;% 
+  group_by(state_bloc, launch_year) %&gt;% 
+  add_tally() %&gt;% 
+  add_count(agency_type) %&gt;% 
+  distinct(state_bloc, launch_year, agency_type, n, nn) %&gt;%  
+  mutate(proportion = nn / n) %&gt;% 
+  ggplot(aes(x = launch_year, y = proportion*100, 
+             fill = agency_type)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  facet_wrap(~state_bloc, nrow = 4) +
+  labs(title = &quot;Number of lauches per state bloc&quot;,
+       subtitle = &quot;While in Europe and in the states the market has been recently privatised, \nstate still accounts for most lauches in Asia and Russia&quot;,
+       x = &quot;Year of launch&quot;,
+       y = &quot;Percentage of lauches&quot;,
+       fill = &quot;Type of agency&quot;) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme_minimal() +
+   theme(panel.grid = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;)) +
+   scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
+  my_theme</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-18-1.png" width="960" /></p>
+</div>
+<div id="date-of-launches" class="section level1">
+<h1>Date of launches</h1>
+<p>Since the data is so huge, I focus on an early period of the space exploration, and on the past decade.</p>
+<pre class="r"><code>launches %&gt;% 
+  drop_na(launch_month, launch_week_num, launch_weekday, launch_year) %&gt;% 
+  filter(launch_year %in% c(1965:1970)) %&gt;% 
+  count(launch_year, launch_month, 
+        launch_weekday, launch_week_num) %&gt;% 
+  ggplot(aes(x = launch_week_num, 
+             y = launch_weekday)) + 
+  geom_tile(aes(fill = n),colour = &quot;white&quot;, na.rm = TRUE) +
+  facet_grid(vars(launch_year), vars(launch_month), 
+             scale = &quot;free&quot;) + 
+  scale_fill_viridis(option = &quot;viridis&quot;,
+                     direction = -1) +
+  #scale_fill_gradient(low=&quot;red&quot;, high=&quot;yellow&quot;) +
+  theme_bw() +
+  labs(title = &quot;Date of launches from 1965 to 1970&quot;,
+       x = &quot;Week of the month&quot;, 
+       y = &quot;Day of the week&quot;,
+       fill = &quot;Number of launches per day&quot;) +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank())</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-19-1.png" width="960" /></p>
+<pre class="r"><code>launches %&gt;% 
+  drop_na(launch_month, launch_week_num, launch_weekday, launch_year) %&gt;% 
+  filter(launch_year %in% c(2010:2017)) %&gt;% 
+  count(launch_year, launch_month, 
+        launch_weekday, launch_week_num) %&gt;% 
+  ggplot(aes(x = launch_week_num, 
+             y = launch_weekday)) + 
+  geom_tile(aes(fill = n),colour = &quot;white&quot;, na.rm = TRUE) +
+  facet_grid(vars(launch_year), vars(launch_month), 
+             scale = &quot;free&quot;) + 
+  scale_fill_viridis(option = &quot;viridis&quot;,
+                     direction = -1) +
+  theme_bw() +
+  labs(title = &quot;Date of launches from 2010 to 2017&quot;,
+       x = &quot;Week of the month&quot;, 
+       y = &quot;Day of the week&quot;, 
+       fill = &quot;Number of launches per day&quot;) +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank())</code></pre>
+<p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-20-1.png" width="960" /></p>
+</div>
