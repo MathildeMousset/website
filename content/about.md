@@ -12,14 +12,19 @@ I am generally interested in topics at the frontiers of ecology and evolution. I
 
 During my PhD, I investigated  mating system evolution, adaptation and the mutual influences of both processes. I studied different aspects of this interaction using a hypertolerant, hyperaccumulator plant species, *Noccaea caerulescens*. This species grows on former mines and non-contaminated soils in Europe and in particularly in the Cévennes, and it is an excellent model to study the interaction of local adaptation in a heterogeneous environment and mating system.
 
-![](/content/about_files/site3.png)
+<center>
+![](/pictures_about/site3.png)
+</center>
+
 
 
 During my first postdoc, I studied plant plasticity in response to shade and investigate how the environment of the parents influence offspring traits, using the wild snapdragon, *Antirrhinum majus*.
 
 During my current postdoc, I study how crosses between higly inbred lines of wild *Medicago truncatula* affects the trade-off between ressources aquisition and conservation in leaves.
 
-![](/content/about_files/site4.png)
+<center>
+![](/pictures_about/site4.png)
+</center>
 
 # Education
 
