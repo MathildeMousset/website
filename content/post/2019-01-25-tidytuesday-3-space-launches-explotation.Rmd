@@ -8,7 +8,7 @@ tags:
   - R
   - data visualisation
   - twitter
-  - '#TidyTuesday'
+  - TidyTuesday
 ---
 
 This week, I decided to try the [#Tidytuesday](https://github.com/rfordatascience/tidytuesday) twitter challenge. Every week, [Thomas Mock](https://twitter.com/thomas_mock?lang=en) provides a mostly clean dataset for the community to analyse. 

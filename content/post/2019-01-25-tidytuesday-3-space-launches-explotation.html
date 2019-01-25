@@ -8,7 +8,7 @@ tags:
   - R
   - data visualisation
   - twitter
-  - '#TidyTuesday'
+  - TidyTuesday
 ---
 
 
@@ -64,7 +64,7 @@ launches &lt;- launches %&gt;%
     &quot;IT&quot; = &quot;I&quot;,
     &quot;KY&quot; = &quot;CYM&quot;,
     &quot;GB&quot; = &quot;UK&quot;) </code></pre>
-<p>Now that I made sure that all my country codes follow the ISO2c norm, I can use the <code>countrycode</code> function to obtain the full country names.</p>
+<p>Now that I made sure that all my country codes follow the ISO2c norm, I can use the <code>countrycode()</code> function to obtain the full country names.</p>
 <pre class="r"><code>launches$state_name &lt;- countrycode(launches$state_code_clean,
                                    &quot;iso2c&quot;, 
                                    &quot;country.name&quot;)
@@ -195,7 +195,7 @@ launches$state_name %&gt;% unique() %&gt;% kable()</code></pre>
 <pre class="r"><code>launches &lt;- launches %&gt;%  
   mutate(state_name_short = fct_lump(state_name, 6)) %&gt;%
   replace_na(list(state_name_short = &quot;Other&quot;)) </code></pre>
-<p>Personally, I also like the idea of pooling countries by geographical area. It does not change much for the state and Russia, but I think it helps having a better picture about Europe and Asia.</p>
+<p>Personally, I also like the idea of pooling countries by geographical area. It does not change much for the United States and Russia, but I think it helps having a better picture about Europe and Asia.</p>
 <p>I also change the levels of the <code>category</code> column to make them more understandable.</p>
 <pre class="r"><code>launches &lt;- launches %&gt;% 
   mutate(state_bloc = fct_collapse(state_code_clean,
@@ -271,12 +271,12 @@ launches$state_name %&gt;% unique() %&gt;% kable()</code></pre>
    scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
   my_theme</code></pre>
 <p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
-<p>I like how it is easier to see what’s happening in Asia.</p>
-<p>The United states began the space race, closely followed by Russia, which dominated the number of launches until the late nineties. After that, Russia and the US were stable and equivalent. In the early 2000, China, followed by India increased their shares of the launches.</p>
+<p>I like how it is shows that Asia has grown so much recently.</p>
+<p>The United states began the space race, closely followed by Russia, which dominated the number of launches until the late nineties. After that, Russia and the US were stable and equivalent. In the early 2000, China, followed by India increased their shares of the launches more recently.</p>
 </div>
 <div id="us-vs-russia" class="section level1">
 <h1>US vs Russia</h1>
-<p>Since for a long time the race was dominated by the US and Russia, let’s have a nice comparison graph between the two.</p>
+<p>Since for a long time the race was dominated by the US and Russia, let’s compare the two.</p>
 <pre class="r"><code>launches %&gt;% 
   filter(state_name %in% c(&quot;United States&quot;, &quot;Russia&quot;)) %&gt;%
    ggplot(aes(x = launch_year, fill = state_name)) +
@@ -298,7 +298,7 @@ launches$state_name %&gt;% unique() %&gt;% kable()</code></pre>
 </div>
 <div id="success-vs-failure" class="section level1">
 <h1>Success vs Failure</h1>
-<p>We have the information on whether the launch was a success or a failure. let’s have a look at how the number of failures evolved though time.</p>
+<p>We have the information on whether the launch was a success or a failure. Let’s have a look at how the number of failures evolved though time.</p>
 <pre class="r"><code>launches %&gt;% 
   count(category, launch_year) %&gt;% 
   ggplot(aes(x = launch_year, y = n,
@@ -363,6 +363,7 @@ launches$state_name %&gt;% unique() %&gt;% kable()</code></pre>
   scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
   my_theme</code></pre>
 <p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-16-1.png" width="960" /></p>
+<p>Cool, so everybody improves after some times.</p>
 </div>
 <div id="private-vs-public-lauches" class="section level1">
 <h1>Private vs public lauches</h1>
@@ -408,6 +409,7 @@ launches$state_name %&gt;% unique() %&gt;% kable()</code></pre>
    scale_x_continuous(&quot;&quot;, breaks = seq(1960, 2020, 10)) +
   my_theme</code></pre>
 <p><img src="/post/2019-01-25-tidytuesday-3-space-launches-explotation_files/figure-html/unnamed-chunk-18-1.png" width="960" /></p>
+<p>While launches were performed by state agencies for a long time, the pravate sector operates most of the launches nowadays in Europe and in the States.</p>
 </div>
 <div id="date-of-launches" class="section level1">
 <h1>Date of launches</h1>
