@@ -32,7 +32,7 @@ More seriously, though, I have been meaning to bring my data analysis skills up 
 
 # What is #Tidytuesday? 
 
-[#Tidytuesday](https://github.com/rfordatascience/tidytuesday)is a weekly twitter challenge, created and maintained by [Thomas Mock](https://twitter.com/thomas_mock?lang=en). Every Monday, a new dataset is released to the community. Anybody can download it, play with the data, and publish a figure and, ideally, its generating code.
+[#Tidytuesday](https://github.com/rfordatascience/tidytuesday) is a weekly twitter challenge, created and maintained by [Thomas Mock](https://twitter.com/thomas_mock?lang=en). Every Monday, a new dataset is released to the community. Anybody can download it, play with the data, and publish a figure and, ideally, its generating code.
 
 The datasets cover a wide range of subjects, such as [TV shows ratings](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-08), [space launches](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-15), [australian salaries](https://github.com/rfordatascience/tidytuesday/tree/master/data/2018/2018-04-23), [fast-food calories](https://github.com/rfordatascience/tidytuesday/tree/master/data/2018/2018-09-04), or [Malaria epidemiological data](https://github.com/rfordatascience/tidytuesday/tree/master/data/2018/2018-11-13). The data is ususally provided with a companion article about it (for example, from [The Economist](https://github.com/TheEconomist/graphic-detail-data/tree/master/data/2018-10-20_space-launches), or [538](https://data.fivethirtyeight.com/)), where one or more figures and a story are presented to the reader.
 
@@ -51,42 +51,44 @@ The long answer is that I come from an experimental background in evolutionay ec
 While I have analysed very different types of data spanning different sort of organisms (fish, plants, wasps), I sort of specialized in plant biology in the past years, which means that I **grow my own data with my sweat**. I never really thought before how this affects the way I approach data exploration and analysis.
 
 
-Typically, my workflow involves thinking a lot about some interesting questions, then design an experiment to provide (hopefully interesting) answers, carry-on the experiment (here comes the sweat), analyse the data, and publish the paper in a peer-revied journal (and give poster presentation and talks at conferences). The processus usually takes more than one year^[Or more. My reccord is three years.]
+Typically, my workflow involves thinking a lot about some interesting questions, then design an experiment to provide answers, carry-on the experiment (here comes the sweat), analyse the data, and publish the paper in a peer-revied journal. The process usually takes more than one year^[Or more. My personnal max is three years.]
 
-This means that I think of the statistical models I want to built to analyse the data *before* performing the experiment. It does not prevent the occasional "reality happens" problems, but it is an absolute step to design good experiments, and avoid the pitfall of *"uhuh, we did not think this really through"*. In short, I do my best to make sure that I have adequate data to answer pre-defined questions. Sometimes, I get lucky and find that I can answer other questions that I did not think off beforehand with the data, and that's cool, but this is a nice side-effect.
+This means that I think of the statistical models I want to built to analyse the data *before* performing the experiment. It does not prevent the occasional "reality happens" problems, but it is an absolute step to design good experiments, and avoid the pitfall of *"uhuh, we did not think this really through"*. In short, I do my best to make sure that I have adequate data to answer pre-defined questions. Sometimes, I get lucky and find that I can answer other questions that I did not think off beforehand, and that's cool, but this is a nice side-effect.
 
 **Additionaly, my data usually have these characteristics:**  
 
-- **They are small.** Someone ^[me, with the occasional help of other people] had to laboriously measure all the plants. Some measurements are time consumming (sometimes up to months of work), some others are expensive. The largest data file I ever had to use contained 4000 lines. I rarelly have to think about the performance of my code, except for some longer statistical analyses. And size is rarely a limitation for plotting the raw data.
+## They are small
+
+Someone ^[me, with the occasional help of other people] had to laboriously measure all the plants. Some measurements are time consumming (sometimes up to months of work), some others are expensive. The largest data file I ever had to use contained 4000 lines. I rarelly have to think about the performance of my code, except for some longer statistical analyses. And size is rarely a limitation for plotting the raw data.
 
 
 ## I know the content intimately
 
-After all, the factors and covariates are the one I carefully chose to include in my experiment. I know the levels of the factors. I have a good intuition on the variation in continuous data. Good reccord practice means that I know of all abbreviation.
+After all, the factors and covariates are the one I carefully chose to include in my experiment. I know the levels of the factors. I have a good intuition on the variation in continuous data. Good reccord practice means that I know of all abbreviations.
 
-As a consequence, when I begin the analysis,  I don't need time to *understand* what a column or a string represent. I *know* and I already have the important questions in my mind. Even if new questions may occur to me as I go, I *always* dive in data exploration with at least one well pondered question and associated statistical model. Why, I have been thinking about them for months, or even *years*!  
+As a consequence, when I begin the analysis,  I don't need time to *understand* what a column or a string represent. I *know* and I already have the important questions in my mind. Even if new questions may occur to me as I go, I can *dive* in data exploration. Why, I have been thinking about them for months, or even *years*!  
 
 As for any data analysis, the exploration phase is intensive: I need to get to know the data intimately, and sometimes, in the process, I need to switch to other types of analysis (damn you, reality!), but I know where I am heading.
 
 
-## They are (mostly) tidy
+## They are tidy
 
 Gone are the days of my first internship when I did not know how to properly format raw data. I learned from my mistakes and, the internet being the helpful scary-stories teller, I also learned from other's mistakes.
 
 Nowadays, my own datasets are tidy (ore one or two lines of code away from perfection^[Why, no need to be modest with one's data]) and well documented. 
 
 
-Parallely, I have grown fluent with the wonderful `tidiverse` tools, and I feel confortable reshaping data, and importing from not-so-tidy-Exel-of-hell files. Actually, it has become a lot of *fun* to do that. So much fun that I have voluntereed for tidying up and cleaning datasets and `readxl', 'dplyr` and `purrr` work so well together that it's a pleasure to watch them do the work in one smooth and elegant chunk. But let's not getting too distracted...
+Parallely, I have grown fluent with the wonderful `tidiverse` tools, and I feel confortable reshaping data, and importing from not-so-tidy-Exel-of-hell files^[![](https://media.giphy.com/media/kSA7u0tUziLXq/giphy.gif)]. Actually, it has become a lot of *fun* to do that. So much fun that I have recently voluntereed for tidying up and cleaning datasets. `readxl', 'dplyr` and `purrr` work so well together and it is a pleasure to watch them do the work in one smooth and elegant chunk. But let's not getting too distracted...
 
 
-## They are mostly communicated through traditionnal, formal channels
+## The results are communicated through the traditionnal, scientific channels
 
 Journals, posters, presentations. I craft figures that fit in these channels. I never had to tell a story with only one figure: I usually use several distinct elements to help readers understand the answer to my questions.
 
 
 # TL:DR
 
-I want to improve on the skills mobilized when exploring an unkown, huge dataset, and on sharing short but meaningfull stories by alternative channels (twitter, blogs etc.).
+I want to improve on the skills mobilized when exploring an unkown, huge dataset, and on sharing short but meaningfull stories on alternative channels (twitter, blogs etc.).
 
 
 Fortunately, data is everywhere. They are so many great questions to address, it's exhilarating.
@@ -98,27 +100,32 @@ Unfortunately, is it *so everywhere* that it is a bit hard to know where to begi
 
 
 
-## All types of data
-Text for example. For me text used to be, essentially, factors. I could not really understand all the hype around `StringAsFactors==FALSE`. I saw that a dataset had been recently published on #Tidytuesday with the recent tweets associated with the hashtag. My first thought was "What the hell am I supposed to do with *tweets*?". My second, of course, was:  
+## There are all sorts of data type
 
-![](https://media.giphy.com/media/81MHl1DY9kxMI/giphy.gif"shiiiiiin)
-
-I had not realized that it was so easy to dive in text analysis in R. 
+Text for example. For me text used to be, essentially, factors. I could not really understand all the hype around `StringAsFactors==FALSE`. When I saw that a dataset had been recently published on #Tidytuesday with the recent tweets associated with the hashtag, my first thought was "What the hell am I supposed to do with *tweets*?". My second, of course, was:  ![](https://gph.is/2gRkKcA) I had not realized that it was so easy to dive in text analysis in R. So all types of data means that I have to learn all kinds of new cool tools.
 
 
 ## They teach me to get to know totaly unknown data fast
 
-Well, this is just a matter of practice. But it is also very fun. It's like a treasure quest: I know there are some stories, some big, some small to tell with this dataset, I just need to be observant enough, and to think creatively to see them.
+If you read the previous part, this should be pretty self-explanatory: I need to get fast at exploring unknown datasets. I already know the tools, it is just a matter of practice. But it is also very fun. It's like a treasure quest: I know there are some stories, some big, some small to tell with this dataset, I just need to be observant enough, and to think creatively to see them.
 
 
 ## There is one dataset per week
 
-No need to be perfectionist. No need to perform the *perfect* statistical analysis. If I only have time to scratch upon the exploration and make one figure, then so be it. I don't necessarily need to dive in all the details and tell all stories that could be told with this dataset. I just need to tell one. An hopefully compelling and interesting story, but it does not have to be big.
+No need to be perfectionist. No need to perform the *perfect* statistical analysis. If I only have time to scratch upon the exploration and make one figure, then so be it. I don't necessarily need to dive in all the gorry details and tell all stories that could be told. I just need to tell one. An hopefully compelling and interesting story, but it does not have to be big.
 
 
 ## The community is fantastic 
 
-Seeing a lot of people sharing their ideas, and scripts is truly incredible. It is a fantastic opportunity to learn new tools, or new ways of doing things. It is a fantastic boost of motivation. It is a fantastic source of inspiration: "Wow, that's a very cool figure, let's figure out how to generate it", or "they found this in the data, that makes me wonder about that...". And finally, it is a fantastic push towards reproductibility, because people are encouraged to post their code. This nudges people to write clear, commented, fully reproductible code and post it on Github'n Co.
+Seeing a lot of people sharing their ideas, and scripts is truly incredible. 
+
+It is a fantastic opportunity to learn new tools and tricks, or new ways of doing things just by reading other's people code. 
+
+It is a fantastic boost of motivation and a source of inspiration: "Wow, that's a very cool figure, let's figure out how to generate it", or "they found this in the data, that makes me wonder about that...". 
+
+And finally, it is a fantastic push towards reproductibility, because people are encouraged to post their code. This nudges people to write clear, commented, fully reproductible code and post it on Github'n Co.
+
+Also, people are super nice and supportive <3
 
 
 # Conclusion

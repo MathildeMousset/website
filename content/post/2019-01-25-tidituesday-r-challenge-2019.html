@@ -21,7 +21,7 @@ Data vizualisation, analysis and storytelling is an art. I have honned my skills
 <p>More seriously, though, I have been meaning to bring my data analysis skills up to the next level. Practice makes perfect, or so they say. While I do not believe in perfection either, I begrudgelly believe in practice. So I need data to hone my skills with. Enters #Tidytuesday…</p>
 <div id="what-is-tidytuesday" class="section level1">
 <h1>What is #Tidytuesday?</h1>
-<p><a href="https://github.com/rfordatascience/tidytuesday">#Tidytuesday</a>is a weekly twitter challenge, created and maintained by <a href="https://twitter.com/thomas_mock?lang=en">Thomas Mock</a>. Every Monday, a new dataset is released to the community. Anybody can download it, play with the data, and publish a figure and, ideally, its generating code.</p>
+<p><a href="https://github.com/rfordatascience/tidytuesday">#Tidytuesday</a> is a weekly twitter challenge, created and maintained by <a href="https://twitter.com/thomas_mock?lang=en">Thomas Mock</a>. Every Monday, a new dataset is released to the community. Anybody can download it, play with the data, and publish a figure and, ideally, its generating code.</p>
 <p>The datasets cover a wide range of subjects, such as <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-08">TV shows ratings</a>, <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-15">space launches</a>, <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2018/2018-04-23">australian salaries</a>, <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2018/2018-09-04">fast-food calories</a>, or <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2018/2018-11-13">Malaria epidemiological data</a>. The data is ususally provided with a companion article about it (for example, from <a href="https://github.com/TheEconomist/graphic-detail-data/tree/master/data/2018-10-20_space-launches">The Economist</a>, or <a href="https://data.fivethirtyeight.com/">538</a>), where one or more figures and a story are presented to the reader.</p>
 <p>The data file(s) have been “tamed”, but some of them involve some data wrangling to get a tidy dataset, and all of them need some data manipulation to improve some of the variables, or create new ones for needed for the analysis. One is then free to plot and analyse as they see fit, either trying to replicate the results or figures from the original article, or exploring new questions.</p>
 </div>
@@ -31,57 +31,57 @@ Data vizualisation, analysis and storytelling is an art. I have honned my skills
 <p>The short answer is that this type of data analysis is a bit different from what I am used to.</p>
 <p>The long answer is that I come from an experimental background in evolutionay ecology. My life revolves around finding interesting questions that I would rather want to answer, get the data, analyse them and tell the world about it. Until recently, I never thought about defining myself as a data scientist, but I am definitly a scientist who generates and eats data.</p>
 <p>While I have analysed very different types of data spanning different sort of organisms (fish, plants, wasps), I sort of specialized in plant biology in the past years, which means that I <strong>grow my own data with my sweat</strong>. I never really thought before how this affects the way I approach data exploration and analysis.</p>
-<p>Typically, my workflow involves thinking a lot about some interesting questions, then design an experiment to provide (hopefully interesting) answers, carry-on the experiment (here comes the sweat), analyse the data, and publish the paper in a peer-revied journal (and give poster presentation and talks at conferences). The processus usually takes more than one year<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
-<p>This means that I think of the statistical models I want to built to analyse the data <em>before</em> performing the experiment. It does not prevent the occasional “reality happens” problems, but it is an absolute step to design good experiments, and avoid the pitfall of <em>“uhuh, we did not think this really through”</em>. In short, I do my best to make sure that I have adequate data to answer pre-defined questions. Sometimes, I get lucky and find that I can answer other questions that I did not think off beforehand with the data, and that’s cool, but this is a nice side-effect.</p>
+<p>Typically, my workflow involves thinking a lot about some interesting questions, then design an experiment to provide answers, carry-on the experiment (here comes the sweat), analyse the data, and publish the paper in a peer-revied journal. The process usually takes more than one year<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
+<p>This means that I think of the statistical models I want to built to analyse the data <em>before</em> performing the experiment. It does not prevent the occasional “reality happens” problems, but it is an absolute step to design good experiments, and avoid the pitfall of <em>“uhuh, we did not think this really through”</em>. In short, I do my best to make sure that I have adequate data to answer pre-defined questions. Sometimes, I get lucky and find that I can answer other questions that I did not think off beforehand, and that’s cool, but this is a nice side-effect.</p>
 <p><strong>Additionaly, my data usually have these characteristics:</strong></p>
-<ul>
-<li><strong>They are small.</strong> Someone <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a> had to laboriously measure all the plants. Some measurements are time consumming (sometimes up to months of work), some others are expensive. The largest data file I ever had to use contained 4000 lines. I rarelly have to think about the performance of my code, except for some longer statistical analyses. And size is rarely a limitation for plotting the raw data.</li>
-</ul>
+<div id="they-are-small" class="section level2">
+<h2>They are small</h2>
+<p>Someone <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a> had to laboriously measure all the plants. Some measurements are time consumming (sometimes up to months of work), some others are expensive. The largest data file I ever had to use contained 4000 lines. I rarelly have to think about the performance of my code, except for some longer statistical analyses. And size is rarely a limitation for plotting the raw data.</p>
+</div>
 <div id="i-know-the-content-intimately" class="section level2">
 <h2>I know the content intimately</h2>
-<p>After all, the factors and covariates are the one I carefully chose to include in my experiment. I know the levels of the factors. I have a good intuition on the variation in continuous data. Good reccord practice means that I know of all abbreviation.</p>
-<p>As a consequence, when I begin the analysis, I don’t need time to <em>understand</em> what a column or a string represent. I <em>know</em> and I already have the important questions in my mind. Even if new questions may occur to me as I go, I <em>always</em> dive in data exploration with at least one well pondered question and associated statistical model. Why, I have been thinking about them for months, or even <em>years</em>!</p>
+<p>After all, the factors and covariates are the one I carefully chose to include in my experiment. I know the levels of the factors. I have a good intuition on the variation in continuous data. Good reccord practice means that I know of all abbreviations.</p>
+<p>As a consequence, when I begin the analysis, I don’t need time to <em>understand</em> what a column or a string represent. I <em>know</em> and I already have the important questions in my mind. Even if new questions may occur to me as I go, I can <em>dive</em> in data exploration. Why, I have been thinking about them for months, or even <em>years</em>!</p>
 <p>As for any data analysis, the exploration phase is intensive: I need to get to know the data intimately, and sometimes, in the process, I need to switch to other types of analysis (damn you, reality!), but I know where I am heading.</p>
 </div>
-<div id="they-are-mostly-tidy" class="section level2">
-<h2>They are (mostly) tidy</h2>
+<div id="they-are-tidy" class="section level2">
+<h2>They are tidy</h2>
 <p>Gone are the days of my first internship when I did not know how to properly format raw data. I learned from my mistakes and, the internet being the helpful scary-stories teller, I also learned from other’s mistakes.</p>
 <p>Nowadays, my own datasets are tidy (ore one or two lines of code away from perfection<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>) and well documented.</p>
-<p>Parallely, I have grown fluent with the wonderful <code>tidiverse</code> tools, and I feel confortable reshaping data, and importing from not-so-tidy-Exel-of-hell files. Actually, it has become a lot of <em>fun</em> to do that. So much fun that I have voluntereed for tidying up and cleaning datasets and <code>readxl', 'dplyr</code> and <code>purrr</code> work so well together that it’s a pleasure to watch them do the work in one smooth and elegant chunk. But let’s not getting too distracted…</p>
+<p>Parallely, I have grown fluent with the wonderful <code>tidiverse</code> tools, and I feel confortable reshaping data, and importing from not-so-tidy-Exel-of-hell files<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. Actually, it has become a lot of <em>fun</em> to do that. So much fun that I have recently voluntereed for tidying up and cleaning datasets. <code>readxl', 'dplyr</code> and <code>purrr</code> work so well together and it is a pleasure to watch them do the work in one smooth and elegant chunk. But let’s not getting too distracted…</p>
 </div>
-<div id="they-are-mostly-communicated-through-traditionnal-formal-channels" class="section level2">
-<h2>They are mostly communicated through traditionnal, formal channels</h2>
+<div id="the-results-are-communicated-through-the-traditionnal-scientific-channels" class="section level2">
+<h2>The results are communicated through the traditionnal, scientific channels</h2>
 <p>Journals, posters, presentations. I craft figures that fit in these channels. I never had to tell a story with only one figure: I usually use several distinct elements to help readers understand the answer to my questions.</p>
 </div>
 </div>
 <div id="tldr" class="section level1">
 <h1>TL:DR</h1>
-<p>I want to improve on the skills mobilized when exploring an unkown, huge dataset, and on sharing short but meaningfull stories by alternative channels (twitter, blogs etc.).</p>
+<p>I want to improve on the skills mobilized when exploring an unkown, huge dataset, and on sharing short but meaningfull stories on alternative channels (twitter, blogs etc.).</p>
 <p>Fortunately, data is everywhere. They are so many great questions to address, it’s exhilarating.</p>
 <p>Unfortunately, is it <em>so everywhere</em> that it is a bit hard to know where to begin with. That is why the #Tidytuesday challenge is so great.</p>
 </div>
 <div id="why-is-the-tidytuesday-such-a-great-opportinity" class="section level1">
 <h1>Why is the #Tidytuesday such a great opportinity?</h1>
-<div id="all-types-of-data" class="section level2">
-<h2>All types of data</h2>
-<p>Text for example. For me text used to be, essentially, factors. I could not really understand all the hype around <code>StringAsFactors==FALSE</code>. I saw that a dataset had been recently published on #Tidytuesday with the recent tweets associated with the hashtag. My first thought was “What the hell am I supposed to do with <em>tweets</em>?”. My second, of course, was:</p>
-<div class="figure">
-<embed src="https://media.giphy.com/media/81MHl1DY9kxMI/giphy.gif%22shiiiiiin" />
-
-</div>
-<p>I had not realized that it was so easy to dive in text analysis in R.</p>
+<div id="there-are-all-sorts-of-data-type" class="section level2">
+<h2>There are all sorts of data type</h2>
+<p>Text for example. For me text used to be, essentially, factors. I could not really understand all the hype around <code>StringAsFactors==FALSE</code>. When I saw that a dataset had been recently published on #Tidytuesday with the recent tweets associated with the hashtag, my first thought was “What the hell am I supposed to do with <em>tweets</em>?”. My second, of course, was: <img src="https://gph.is/2gRkKcA" /> I had not realized that it was so easy to dive in text analysis in R. So all types of data means that I have to learn all kinds of new cool tools.</p>
 </div>
 <div id="they-teach-me-to-get-to-know-totaly-unknown-data-fast" class="section level2">
 <h2>They teach me to get to know totaly unknown data fast</h2>
-<p>Well, this is just a matter of practice. But it is also very fun. It’s like a treasure quest: I know there are some stories, some big, some small to tell with this dataset, I just need to be observant enough, and to think creatively to see them.</p>
+<p>If you read the previous part, this should be pretty self-explanatory: I need to get fast at exploring unknown datasets. I already know the tools, it is just a matter of practice. But it is also very fun. It’s like a treasure quest: I know there are some stories, some big, some small to tell with this dataset, I just need to be observant enough, and to think creatively to see them.</p>
 </div>
 <div id="there-is-one-dataset-per-week" class="section level2">
 <h2>There is one dataset per week</h2>
-<p>No need to be perfectionist. No need to perform the <em>perfect</em> statistical analysis. If I only have time to scratch upon the exploration and make one figure, then so be it. I don’t necessarily need to dive in all the details and tell all stories that could be told with this dataset. I just need to tell one. An hopefully compelling and interesting story, but it does not have to be big.</p>
+<p>No need to be perfectionist. No need to perform the <em>perfect</em> statistical analysis. If I only have time to scratch upon the exploration and make one figure, then so be it. I don’t necessarily need to dive in all the gorry details and tell all stories that could be told. I just need to tell one. An hopefully compelling and interesting story, but it does not have to be big.</p>
 </div>
 <div id="the-community-is-fantastic" class="section level2">
 <h2>The community is fantastic</h2>
-<p>Seeing a lot of people sharing their ideas, and scripts is truly incredible. It is a fantastic opportunity to learn new tools, or new ways of doing things. It is a fantastic boost of motivation. It is a fantastic source of inspiration: “Wow, that’s a very cool figure, let’s figure out how to generate it”, or “they found this in the data, that makes me wonder about that…”. And finally, it is a fantastic push towards reproductibility, because people are encouraged to post their code. This nudges people to write clear, commented, fully reproductible code and post it on Github’n Co.</p>
+<p>Seeing a lot of people sharing their ideas, and scripts is truly incredible.</p>
+<p>It is a fantastic opportunity to learn new tools and tricks, or new ways of doing things just by reading other’s people code.</p>
+<p>It is a fantastic boost of motivation and a source of inspiration: “Wow, that’s a very cool figure, let’s figure out how to generate it”, or “they found this in the data, that makes me wonder about that…”.</p>
+<p>And finally, it is a fantastic push towards reproductibility, because people are encouraged to post their code. This nudges people to write clear, commented, fully reproductible code and post it on Github’n Co.</p>
+<p>Also, people are super nice and supportive &lt;3</p>
 </div>
 </div>
 <div id="conclusion" class="section level1">
@@ -91,8 +91,9 @@ Data vizualisation, analysis and storytelling is an art. I have honned my skills
 <div class="footnotes">
 <hr />
 <ol>
-<li id="fn1"><p>Or more. My reccord is three years.<a href="#fnref1">↩</a></p></li>
+<li id="fn1"><p>Or more. My personnal max is three years.<a href="#fnref1">↩</a></p></li>
 <li id="fn2"><p>me, with the occasional help of other people<a href="#fnref2">↩</a></p></li>
 <li id="fn3"><p>Why, no need to be modest with one’s data<a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p><img src="https://media.giphy.com/media/kSA7u0tUziLXq/giphy.gif" /><a href="#fnref4">↩</a></p></li>
 </ol>
 </div>
