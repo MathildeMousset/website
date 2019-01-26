@@ -1,5 +1,5 @@
 ---
-title: '#Tidytuesday 3: Space launches explotation'
+title: '#Tidytuesday 3: Space launches exploration'
 author: Mathilde Mousset
 date: '2019-01-25'
 slug: tidytuesday-3-space-launches-explotation
