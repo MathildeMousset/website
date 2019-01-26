@@ -22,13 +22,13 @@ summary_prison <- read.csv("https://raw.githubusercontent.com/rfordatascience/ti
 ```
 
 
-Here is my first take at exploring the [#Tidytuesday](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-22) challenge from **week 4**. 
+Here is my first take at exploring the [#Tidytuesday](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-22) challenge from week 4. 
 
 # Today's dataset & aims
 
 This week's challenge is a large set of data concerning incarceration trends in the US. Data come from the [github](https://github.com/vera-institute/incarceration_trends) page of the [Vera Institute of Justice](http://trends.vera.org/incarceration-rates?data=localJail). Vera aggregated data from several US administration to obtain county-level jail data (1970-2015) and prison data (1983-2015).
 
-The original data is apparently a bit messy, and Thomas Mock provided pre-tamed datasets, and very-tamed summary datasets, as well as the R code of his data wrangling^[did I ever mentioned how I love code reproducibility?], for people who wanted to focus more on visualization and analysing rather than fitting untidiness for today.
+The original data is apparently a bit messy, and Thomas Mock provided pre-tamed datasets, and very-tamed summary datasets, as well as the R code of his data wrangling^[did I ever mentioned how I love code reproducibility?], for people who wanted to focus more on visualization and analysing rather than fighting untidiness today.
 
 They are many questions that one can study, even with the (slightly) reduced datasets, and I think I will explore some of them in different posts.
 
@@ -111,6 +111,28 @@ summary_prison %>%
 ```
 
 
+
+# County type and gender
+
+Wow! I expected some differences of rate of incarceration between men and women, but not *that* strong. Interestingly, the strong difference between county types seem to reflect differences in incarceration rates for guys rather than for females. I am not sure why.
+
+```{r}
+summary_prison %>% 
+  filter(pop_category %in% c("Male", "Female")) %>% 
+  filter(year > 1989) %>% 
+  ggplot(aes(x = year,
+             y = rate_per_100000,
+             colour = urbanicity)) +
+  geom_line(size = 2.5) +
+  labs(title = "Rates of prison incarcerations (for every 100,000 persons)",
+       subtitle = "The incarceration rates differ a lot by gender", 
+       x = "Year",
+       y = "Rate for 100,000",
+       colour = "Type of county") +
+  facet_wrap(vars(pop_category)) +
+  theme_ipsum_rc() +
+  scale_colour_brewer(palette = "Paired")
+```
+
+
 So far I am limited by the data, and also by how little I know about United States demography and social economics to go much further with these plots. I will have to dive into the other datasets to learn more.
-
-

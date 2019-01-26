@@ -12,11 +12,11 @@ tags:
 
 
 
-<p>Here is my first take at exploring the <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-22">#Tidytuesday</a> challenge from <strong>week 4</strong>.</p>
+<p>Here is my first take at exploring the <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-22">#Tidytuesday</a> challenge from week 4.</p>
 <div id="todays-dataset-aims" class="section level1">
 <h1>Today’s dataset &amp; aims</h1>
 <p>This week’s challenge is a large set of data concerning incarceration trends in the US. Data come from the <a href="https://github.com/vera-institute/incarceration_trends">github</a> page of the <a href="http://trends.vera.org/incarceration-rates?data=localJail">Vera Institute of Justice</a>. Vera aggregated data from several US administration to obtain county-level jail data (1970-2015) and prison data (1983-2015).</p>
-<p>The original data is apparently a bit messy, and Thomas Mock provided pre-tamed datasets, and very-tamed summary datasets, as well as the R code of his data wrangling<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>, for people who wanted to focus more on visualization and analysing rather than fitting untidiness for today.</p>
+<p>The original data is apparently a bit messy, and Thomas Mock provided pre-tamed datasets, and very-tamed summary datasets, as well as the R code of his data wrangling<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>, for people who wanted to focus more on visualization and analysing rather than fighting untidiness today.</p>
 <p>They are many questions that one can study, even with the (slightly) reduced datasets, and I think I will explore some of them in different posts.</p>
 <p>In this first (short) post, I will focus on the prison incarceration summary, as it is already clean, because today, I don’t have much time and I am in the mood for plotting things.</p>
 </div>
@@ -81,6 +81,26 @@ tags:
   theme_ipsum_rc() +
   scale_colour_brewer(palette = &quot;Paired&quot;)</code></pre>
 <p><img src="/content/post/2019-01-26-tidytuesday-week-4-exploration-part-1_files/figure-html/unnamed-chunk-2-1.png" width="768" /></p>
+</div>
+<div id="county-type-and-gender" class="section level1">
+<h1>County type and gender</h1>
+<p>Wow! I expected some differences of rate of incarceration between men and women, but not <em>that</em> strong. Interestingly, the strong difference between county types seem to reflect differences in incarceration rates for guys rather than for females. I am not sure why.</p>
+<pre class="r"><code>summary_prison %&gt;% 
+  filter(pop_category %in% c(&quot;Male&quot;, &quot;Female&quot;)) %&gt;% 
+  filter(year &gt; 1989) %&gt;% 
+  ggplot(aes(x = year,
+             y = rate_per_100000,
+             colour = urbanicity)) +
+  geom_line(size = 2.5) +
+  labs(title = &quot;Rates of prison incarcerations (for every 100,000 persons)&quot;,
+       subtitle = &quot;The incarceration rates differ a lot by gender&quot;, 
+       x = &quot;Year&quot;,
+       y = &quot;Rate for 100,000&quot;,
+       colour = &quot;Type of county&quot;) +
+  facet_wrap(vars(pop_category)) +
+  theme_ipsum_rc() +
+  scale_colour_brewer(palette = &quot;Paired&quot;)</code></pre>
+<p><img src="/content/post/2019-01-26-tidytuesday-week-4-exploration-part-1_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <p>So far I am limited by the data, and also by how little I know about United States demography and social economics to go much further with these plots. I will have to dive into the other datasets to learn more.</p>
 </div>
 <div class="footnotes">
