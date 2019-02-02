@@ -1,0 +1,229 @@
+---
+title: Exploration of French High Speed Trains Delays
+author: Mathilde Mousset
+date: '2019-02-02'
+slug: exploration-of-french-high-speed-trains-delays
+categories: []
+tags:
+  - data visualisation
+  - R
+---
+
+
+
+<div id="the-data" class="section level1">
+<h1>The data</h1>
+<p>Today I explore two small datasets from the French train company, the <a href="https://www.sncf.com/en">SNCF</a>. I chanced upon this dataset yesterday when I was exploring the open French datasets.</p>
+<center>
+<img src="https://media.giphy.com/media/3oKIPd0cPwxKl2zbPi/giphy.gif" />
+</center>
+<p>As a long-term user of French trains (and a delays serial complainer), I was immediately interested in their delay data. <a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
+<p>The SNCF provides several datasets, on high-speed trains, between-region trains and regional trains. Since I mostly use the first one these days, and they are freaking <em>expensive</em>, I decided to investigate high-speed trains (aka <strong>TGV</strong>).</p>
+<div id="data-info-and-structure" class="section level2">
+<h2>Data info and structure</h2>
+<p>The dataset were downloaded on the 1st of February 2019 on the <a href="https://data.sncf.com/explore/?sort=modified">Open Data of the French train company</a>: <a href="https://data.sncf.com/explore/dataset/reglarite-mensuelle-tgv-nationale/information/?sort=date">train delays global</a> and train delays per <a href="https://data.sncf.com/explore/dataset/regularite-mensuelle-tgv-axes/information/?sort=date">train line</a>.</p>
+<p>The two files concern the French high speed trains. Their structure is simple.</p>
+<p><code>tgv_axes</code>:<br />
+- <code>year</code>: from 2015 to November 2018,<br />
+- <code>month_number</code>: which month the data concerns (1 to 12),<br />
+- <code>axe</code>: which high speed line was concerned (see below for details),<br />
+- <code>month</code>: which month the data concerns,<br />
+- <code>departure_punctuality</code>: number of trains that left on time at their departure station, over all trains that left this station. Expressed in <em>percentage</em> of trains that departed <strong>that month</strong> and <strong>on this line</strong>,<br />
+- <code>composite_regularity</code>: this index is calculated by the SNCF, based on the number of delayed trains, but taking into account the length of the trip. A train is counted on-time if:<br />
+- for trips shorter than <strong>1h30</strong>: there is &lt;5min delay at arrival<br />
+- for trips between <strong>1h30</strong> and <strong>3h</strong>: there is &lt;10min delay at arrival<br />
+- for trips longer than <strong>3h</strong>: there is &lt;15min delay at arrival</p>
+<p><code>tgv_global</code>: mostly the same but without the <code>axe</code> column.</p>
+<p>Precision of the delay measurement (mostly automatic): the minute (floored).</p>
+<p>The global dataset is not the mean over the axes of the axes dataset.</p>
+<p>The dataset only contains trains operated by the SNCF (not other companies such as Eurostar or Thalys).</p>
+<pre class="r"><code>tgv_axes %&gt;% 
+  count(axe, sort = TRUE) %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">axe</th>
+<th align="right">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Atlantique</td>
+<td align="right">47</td>
+</tr>
+<tr class="even">
+<td align="left">Est</td>
+<td align="right">47</td>
+</tr>
+<tr class="odd">
+<td align="left">Nord</td>
+<td align="right">47</td>
+</tr>
+<tr class="even">
+<td align="left">Sud-Est</td>
+<td align="right">47</td>
+</tr>
+<tr class="odd">
+<td align="left">Europe TGV</td>
+<td align="right">44</td>
+</tr>
+<tr class="even">
+<td align="left">OUIGO</td>
+<td align="right">36</td>
+</tr>
+<tr class="odd">
+<td align="left">Europe</td>
+<td align="right">3</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>Sud-Est</code>, <code>Nord</code>, <code>Est</code>, and <code>Atlantique</code> axes correspond to the four Paris TGV stations and the areas of France they deserve. Trains that move from a sector to another are accounted for in both axes.<br />
+<code>Europe TGV</code> pools trains with international destinations. For some reason, the <code>Europe</code> category is separated from <code>Europe TGV</code>, and only contains three trains. I merge the two levels using the <code>fct_collapse()</code> function from the <code>forcats</code> package.</p>
+<pre class="r"><code>tgv_axes &lt;- tgv_axes %&gt;% 
+  mutate(axe = fct_collapse(axe,
+                            &quot;Europe&quot; = c(&quot;Europe TGV&quot;, &quot;Europe&quot;)
+  ))</code></pre>
+<p>In order to make plotting easier, I create ordered year and month ordered factors.</p>
+<pre class="r"><code># Make year as ordered factor
+tgv_global$year_ordered = factor(tgv_global$year, ordered = TRUE)
+
+# Get months in English
+tgv_global$month_english = factor(tgv_global$month_number, ordered = TRUE)
+levels(tgv_global$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;, &quot;March&quot;, &quot;April&quot;, &quot;May&quot;, &quot;June&quot;, &quot;July&quot;, &quot;August&quot;, &quot;September&quot;,  &quot;October&quot;, &quot;November&quot;, &quot;December&quot;)
+
+
+# Make year as ordered factor
+tgv_axes$year_ordered = factor(tgv_axes$year, ordered = TRUE)
+
+# Get months in English
+tgv_axes$month_english = factor(tgv_axes$month_number, ordered = TRUE)
+levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;, &quot;March&quot;, &quot;April&quot;, &quot;May&quot;, &quot;June&quot;, &quot;July&quot;, &quot;August&quot;, &quot;September&quot;,  &quot;October&quot;, &quot;November&quot;, &quot;December&quot;)</code></pre>
+</div>
+</div>
+<div id="national-data" class="section level1">
+<h1>National data</h1>
+<p>Let’s first look at the global averages over time. I first plot punctuality across time with a simple line plot.</p>
+<pre class="r"><code>tgv_global %&gt;% 
+  ggplot(aes(x = month_english, y = departure_punctuality,
+             group = year)) +
+  stat_summary(fun.y = mean, geom = &quot;line&quot;,
+               size = 2, colour = &quot;#993350&quot;) +
+  #geom_line(size = 2, color = &quot;#993350&quot;) +
+  facet_wrap(~year, nrow = 2) +
+  labs(title = &quot;Punctuality of French High Speed Trains&quot;,
+       subtitle = &quot;Percentage of train leaving on time over all trains leaving&quot;,
+       x = &quot;Month&quot;,
+       y = &quot;Punctuality&quot;) +
+  theme_ipsum_rc() +
+  ylim(70, 90) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))</code></pre>
+<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>For some reason there is a peak of delay in June or July every year. Is this because a lot of people leave on holidays at this period? But then I would expect lots of problems in August or December, and these months do not seem to be much affected.</p>
+<p>Since time data is often readily plotted with heat-maps, I use the <code>geom_tile</code> geom from the <code>ggplot2</code> package to plot the punctuality over time</p>
+<pre class="r"><code>tgv_global %&gt;% 
+  ggplot(aes(x = month_english, y = factor(year_ordered, levels=rev(levels(year_ordered))),
+             fill = departure_punctuality)) +
+  geom_tile() +
+  labs(title = &quot;Punctuality of French High Speed Trains (TGV)&quot;,
+       subtitle = &quot;Percentage of TGV trains leaving on time over all HST trains leaving&quot;,
+       caption = &quot;Data: data.sncf.com&quot;,
+       x = &quot;Month&quot;,
+       y = &quot;Year&quot;,
+       fill = &quot;Rate of trains on time&quot;) +
+  theme_ipsum_rc() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_fill_viridis_c(option = &quot;cividis&quot;, direction = -1)</code></pre>
+<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap1-1.png" width="672" /></p>
+<p>This was a good idea, as this representation allows a better comparison of year. We can see that 2018 was a bad year in terms of train delays. There was a very long strike in the spring and summer of that year, and it probably affected train punctuality.</p>
+<div id="train-regularity" class="section level2">
+<h2>Train regularity</h2>
+<p>Now let’s look how the composite index of regularity evolves over time.</p>
+<pre class="r"><code>tgv_global %&gt;% 
+  ggplot(aes(x = month_english, group = year)) +
+  stat_summary(aes(y = composite_regularity),
+               fun.y = mean, geom = &quot;line&quot;,
+               size = 2, color = &quot;#90A437&quot;) +
+  stat_summary(aes(y = departure_punctuality),
+               fun.y = mean, geom = &quot;line&quot;,
+               size = 2, color = &quot;#993350&quot;) +
+  facet_wrap(~year, nrow = 2) +
+  labs(title = &quot;Regularity and punctuality of French High Speed Trains&quot;,
+       subtitle = &quot;Green = regularity\nRed = punctuality&quot;,
+       caption = &quot;Data: data.sncf.com&quot;,
+       x = &quot;Month&quot;,
+       y = &quot;Percentage of trains&quot;) +
+  theme_ipsum_rc() +
+  ylim(70, 100) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))</code></pre>
+<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Both punctuality and regularity covary strongly. The main difference is that the regularity allow them to have seemingly higher rates of punctual trains, because it decreases the impact of delays up to 15 minutes on longer trips.</p>
+<p>Since both rates are similar, I will report only the punctuality from now on, because we know exactly how it is defined.</p>
+</div>
+</div>
+<div id="by-axes" class="section level1">
+<h1>By axes</h1>
+<p>Now, let’s have a look at how these delays are distributed over the train axes.</p>
+<p>We can first average the punctuality per axe over time.</p>
+<pre class="r"><code>tgv_axes %&gt;% 
+  group_by(axe) %&gt;% 
+  summarise(mean_punctuality = mean(departure_punctuality),
+            sd_punctuality = sd(departure_punctuality)) %&gt;% ungroup() %&gt;% 
+  mutate(axe = fct_reorder(axe, mean_punctuality)) %&gt;%  
+  ggplot(aes(x = axe, y = mean_punctuality)) +
+  
+  geom_errorbar(aes(ymin = mean_punctuality - sd_punctuality,
+                ymax = mean_punctuality + sd_punctuality),
+                width = .2, size = 1) +
+  
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;#993350&quot;) +
+  labs(title = &quot;Mean punctuality of French High Speed Trains per line&quot;,
+       subtitle = &quot;Averaged over time&quot;,
+       caption = &quot;Data: data.sncf.com\nError bars: standard-deviation&quot;,
+       x = &quot;Month&quot;,
+       y = &quot;Percentage of trains&quot;) +
+  theme_ipsum_rc()</code></pre>
+<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>From this plot, it is obvious that the European axes and the OUIGO (the low-cost SNCF service) suffer from more delays than the other lines.</p>
+<p>Let’s see if it’s true every year.</p>
+<pre class="r"><code>tgv_axes %&gt;% 
+  ggplot(aes(x = month_english, y = departure_punctuality,
+             group = axe,
+             colour = axe)) +
+  geom_line(size = 1.5) +
+  facet_wrap(~year, nrow = 2) +
+  labs(title = &quot;Punctuality of French High Speed Trains&quot;,
+       subtitle = &quot;Per line&quot;,
+       caption = &quot;Data: data.sncf.com&quot;,
+       x = &quot;Month&quot;,
+       y = &quot;Percentage of trains&quot;) +
+  theme_ipsum_rc() +
+  ylim(60, 100) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_colour_viridis_d(option = &quot;cividis&quot;)</code></pre>
+<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-6-1.png" width="960" /></p>
+<p>In 2015, the OUIGO data were not provided (although the train have ran since 2013). From 2016, its punctuality was similar to the TGVs that cross borders, that is, departing more often with a delay than the others.</p>
+<p>I am curious at the peak of improved punctuality in 2018 in July. The national data showed a peak of delay at this time. The SNCF insist that the national average is not <em>just</em> the average over these data per lines, and that the rates depend on the number of trains that depart at each station, so this pattern is possible. We also need to remember that trains that go between the axes (say, from Atlantique to South-East) are accounted in both axes. If these trains are proportionaly more on time than trains within axes, they could bias punctuality upwards. I am not sure why that would be the case though.</p>
+<p>This visualisation is not very satisfying, it is difficult to distinguish all the categories. I think we can do a better job with an heat-map.</p>
+<pre class="r"><code>tgv_axes %&gt;% 
+  ggplot(aes(x = month_english, y = factor(year_ordered, levels=rev(levels(year_ordered))),
+             fill = departure_punctuality)) +
+  geom_tile() +
+  labs(title = &quot;Punctuality of French High Speed Trains (TGV)&quot;,
+       subtitle = &quot;Percentage of TGV trains leaving on time over all HST trains leaving&quot;,
+       caption = &quot;Data: data.sncf.com&quot;,
+       x = &quot;Month&quot;,
+       y = &quot;Year&quot;,
+       fill = &quot;Rate of trains on time&quot;) +
+  facet_wrap(~axe, nrow = 2, scales = &quot;free&quot;) +
+  theme_ipsum_rc() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_fill_viridis_c(option = &quot;cividis&quot;, direction = -1) +
+  theme(axis.text.y = element_blank())</code></pre>
+<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap3-1.png" width="960" /></p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Some days you want to be optimistic and plot space lauch successes, some days you just want to see <em>how bad</em> the situation is.<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
