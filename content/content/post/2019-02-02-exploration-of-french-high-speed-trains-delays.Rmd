@@ -58,7 +58,7 @@ The two files concern the French high speed trains. Their structure is simple.
 - `axe`: which high speed line was concerned (see below for details),     
 - `month`: which month the data concerns,  
 - `departure_punctuality`: number of trains that left on time at their departure station, over all trains that left this station. Expressed in *percentage* of trains that departed **that month** and **on this line**,    
-- `composite_regularity`: this index is calculated by the SNCF, based on the number of delayed trains, but taking into account the length of the trip. A train is counted on-time if:   
+- `composite_regularity`: number of trains that arrived on time at arrival over all trains that arrived at arrival from that axe. Except that for this rate, te "on-time" criteria depends on trip lenght. A train is counted on-time if:    
 - for trips shorter than **1h30**: there is <5min delay at arrival  
 - for trips between **1h30** and **3h**: there is <10min delay at arrival  
 - for trips longer than **3h**: there is <15min delay at arrival
@@ -121,8 +121,7 @@ tgv_global %>%
   ggplot(aes(x = month_english, y = departure_punctuality,
              group = year)) +
   stat_summary(fun.y = mean, geom = "line",
-               size = 2, colour = "#993350") +
-  #geom_line(size = 2, color = "#993350") +
+               size = 2, colour = "#CBBA69FF") +
   facet_wrap(~year, nrow = 2) +
   labs(title = "Punctuality of French High Speed Trains",
        subtitle = "Percentage of train leaving on time over all trains leaving",
@@ -130,7 +129,8 @@ tgv_global %>%
        y = "Punctuality") +
   theme_ipsum_rc() +
   ylim(70, 90) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_colour_viridis_c()
 ```
 
 For some reason there is a peak of delay in June or July every year. Is this because a lot of people leave on holidays at this period? But then I would expect lots of problems in August or December, and these months do not seem to be much affected.
@@ -166,10 +166,10 @@ tgv_global %>%
   ggplot(aes(x = month_english, group = year)) +
   stat_summary(aes(y = composite_regularity),
                fun.y = mean, geom = "line",
-               size = 2, color = "#90A437") +
+               size = 2, color = "#31446BFF") +
   stat_summary(aes(y = departure_punctuality),
                fun.y = mean, geom = "line",
-               size = 2, color = "#993350") +
+               size = 2, color = "#CBBA69FF") +
   facet_wrap(~year, nrow = 2) +
   labs(title = "Regularity and punctuality of French High Speed Trains",
        subtitle = "Green = regularity\nRed = punctuality",
@@ -183,7 +183,7 @@ tgv_global %>%
 
 Both punctuality and regularity covary strongly. The main difference is that the regularity allow them to have seemingly higher rates of punctual trains, because it decreases the impact of delays up to 15 minutes on longer trips.
 
-Since both rates are similar, I will report only the punctuality from now on, because we know exactly how it is defined.
+Since both rates are similar, I will report only the punctuality from now on.
 
 
 # By axes
@@ -204,7 +204,7 @@ tgv_axes %>%
                 ymax = mean_punctuality + sd_punctuality),
                 width = .2, size = 1) +
   
-  geom_bar(stat = "identity", fill = "#993350") +
+  geom_bar(stat = "identity", fill = "#CBBA69FF") +
   labs(title = "Mean punctuality of French High Speed Trains per line",
        subtitle = "Averaged over time",
        caption = "Data: data.sncf.com\nError bars: standard-deviation",

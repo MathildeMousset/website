@@ -31,7 +31,7 @@ editor_options:
 - <code>axe</code>: which high speed line was concerned (see below for details),<br />
 - <code>month</code>: which month the data concerns,<br />
 - <code>departure_punctuality</code>: number of trains that left on time at their departure station, over all trains that left this station. Expressed in <em>percentage</em> of trains that departed <strong>that month</strong> and <strong>on this line</strong>,<br />
-- <code>composite_regularity</code>: this index is calculated by the SNCF, based on the number of delayed trains, but taking into account the length of the trip. A train is counted on-time if:<br />
+- <code>composite_regularity</code>: number of trains that arrived on time at arrival over all trains that arrived at arrival from that axe. Except that for this rate, te “on-time” criteria depends on trip lenght. A train is counted on-time if:<br />
 - for trips shorter than <strong>1h30</strong>: there is &lt;5min delay at arrival<br />
 - for trips between <strong>1h30</strong> and <strong>3h</strong>: there is &lt;10min delay at arrival<br />
 - for trips longer than <strong>3h</strong>: there is &lt;15min delay at arrival</p>
@@ -109,8 +109,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   ggplot(aes(x = month_english, y = departure_punctuality,
              group = year)) +
   stat_summary(fun.y = mean, geom = &quot;line&quot;,
-               size = 2, colour = &quot;#993350&quot;) +
-  #geom_line(size = 2, color = &quot;#993350&quot;) +
+               size = 2, colour = &quot;#CBBA69FF&quot;) +
   facet_wrap(~year, nrow = 2) +
   labs(title = &quot;Punctuality of French High Speed Trains&quot;,
        subtitle = &quot;Percentage of train leaving on time over all trains leaving&quot;,
@@ -118,7 +117,8 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
        y = &quot;Punctuality&quot;) +
   theme_ipsum_rc() +
   ylim(70, 90) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))</code></pre>
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_colour_viridis_c()</code></pre>
 <p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <p>For some reason there is a peak of delay in June or July every year. Is this because a lot of people leave on holidays at this period? But then I would expect lots of problems in August or December, and these months do not seem to be much affected.</p>
 <p>Since time data is often readily plotted with heat-maps, I use the <code>geom_tile</code> geom from the <code>ggplot2</code> package to plot the punctuality over time</p>
@@ -144,10 +144,10 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   ggplot(aes(x = month_english, group = year)) +
   stat_summary(aes(y = composite_regularity),
                fun.y = mean, geom = &quot;line&quot;,
-               size = 2, color = &quot;#90A437&quot;) +
+               size = 2, color = &quot;#31446BFF&quot;) +
   stat_summary(aes(y = departure_punctuality),
                fun.y = mean, geom = &quot;line&quot;,
-               size = 2, color = &quot;#993350&quot;) +
+               size = 2, color = &quot;#CBBA69FF&quot;) +
   facet_wrap(~year, nrow = 2) +
   labs(title = &quot;Regularity and punctuality of French High Speed Trains&quot;,
        subtitle = &quot;Green = regularity\nRed = punctuality&quot;,
@@ -159,7 +159,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5))</code></pre>
 <p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>Both punctuality and regularity covary strongly. The main difference is that the regularity allow them to have seemingly higher rates of punctual trains, because it decreases the impact of delays up to 15 minutes on longer trips.</p>
-<p>Since both rates are similar, I will report only the punctuality from now on, because we know exactly how it is defined.</p>
+<p>Since both rates are similar, I will report only the punctuality from now on.</p>
 </div>
 </div>
 <div id="by-axes" class="section level1">
@@ -177,7 +177,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
                 ymax = mean_punctuality + sd_punctuality),
                 width = .2, size = 1) +
   
-  geom_bar(stat = &quot;identity&quot;, fill = &quot;#993350&quot;) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;#CBBA69FF&quot;) +
   labs(title = &quot;Mean punctuality of French High Speed Trains per line&quot;,
        subtitle = &quot;Averaged over time&quot;,
        caption = &quot;Data: data.sncf.com\nError bars: standard-deviation&quot;,
