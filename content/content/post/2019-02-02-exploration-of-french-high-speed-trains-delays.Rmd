@@ -7,6 +7,8 @@ categories: []
 tags:
   - data visualisation
   - R
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -41,11 +43,11 @@ Today I explore two small datasets from the French train company, the [SNCF](htt
 
 As a long-term user of French trains (and a delays serial complainer), I was immediately interested in their delay data. ^[Some days you want to be optimistic and plot space lauch successes, some days you just want to see *how bad* the situation is.]
 
-The SNCF provides several datasets, on high-speed trains, between-region trains and regional trains. Since I mostly use the first one these days, and they are freaking *expensive*, I decided to investigate high-speed trains (aka **TGV**).
+The SNCF provides several datasets, on high-speed trains, between-region trains and regional trains. Since I mostly use the first one these days, and they are *freaking expensive*, I decided to investigate high-speed trains (aka **TGV**).
 
 ## Data info and structure
 
-The dataset were downloaded on the 1st of February 2019 on the [Open Data of the French train company](https://data.sncf.com/explore/?sort=modified): [train delays global](https://data.sncf.com/explore/dataset/reglarite-mensuelle-tgv-nationale/information/?sort=date) and train delays per [train line](https://data.sncf.com/explore/dataset/regularite-mensuelle-tgv-axes/information/?sort=date).
+The datasets were downloaded on the 1st of February 2019 on the [Open Data of the French train company](https://data.sncf.com/explore/?sort=modified): [train delays global](https://data.sncf.com/explore/dataset/reglarite-mensuelle-tgv-nationale/information/?sort=date) and train delays per [train line](https://data.sncf.com/explore/dataset/regularite-mensuelle-tgv-axes/information/?sort=date).
 
 
 The two files concern the French high speed trains. Their structure is simple.
@@ -240,7 +242,7 @@ I am curious at the peak of improved punctuality in 2018 in July. The national d
 
 This visualisation is not very satisfying, it is difficult to distinguish all the categories. I think we can do a better job with an heat-map.  
 
-```{r heatmap3, fig.height=6, fig.width=10}
+```{r heatmap3, fig.height=7, fig.width=11}
 tgv_axes %>% 
   ggplot(aes(x = month_english, y = factor(year_ordered, levels=rev(levels(year_ordered))),
              fill = departure_punctuality)) +
@@ -254,8 +256,7 @@ tgv_axes %>%
   facet_wrap(~axe, nrow = 2, scales = "free") +
   theme_ipsum_rc() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_fill_viridis_c(option = "cividis", direction = -1) +
-  theme(axis.text.y = element_blank())
+  scale_fill_viridis_c(option = "cividis", direction = -1)
 ```
 
 

@@ -7,6 +7,8 @@ categories: []
 tags:
   - data visualisation
   - R
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -18,10 +20,10 @@ tags:
 <img src="https://media.giphy.com/media/3oKIPd0cPwxKl2zbPi/giphy.gif" />
 </center>
 <p>As a long-term user of French trains (and a delays serial complainer), I was immediately interested in their delay data. <a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
-<p>The SNCF provides several datasets, on high-speed trains, between-region trains and regional trains. Since I mostly use the first one these days, and they are freaking <em>expensive</em>, I decided to investigate high-speed trains (aka <strong>TGV</strong>).</p>
+<p>The SNCF provides several datasets, on high-speed trains, between-region trains and regional trains. Since I mostly use the first one these days, and they are <em>freaking expensive</em>, I decided to investigate high-speed trains (aka <strong>TGV</strong>).</p>
 <div id="data-info-and-structure" class="section level2">
 <h2>Data info and structure</h2>
-<p>The dataset were downloaded on the 1st of February 2019 on the <a href="https://data.sncf.com/explore/?sort=modified">Open Data of the French train company</a>: <a href="https://data.sncf.com/explore/dataset/reglarite-mensuelle-tgv-nationale/information/?sort=date">train delays global</a> and train delays per <a href="https://data.sncf.com/explore/dataset/regularite-mensuelle-tgv-axes/information/?sort=date">train line</a>.</p>
+<p>The datasets were downloaded on the 1st of February 2019 on the <a href="https://data.sncf.com/explore/?sort=modified">Open Data of the French train company</a>: <a href="https://data.sncf.com/explore/dataset/reglarite-mensuelle-tgv-nationale/information/?sort=date">train delays global</a> and train delays per <a href="https://data.sncf.com/explore/dataset/regularite-mensuelle-tgv-axes/information/?sort=date">train line</a>.</p>
 <p>The two files concern the French high speed trains. Their structure is simple.</p>
 <p><code>tgv_axes</code>:<br />
 - <code>year</code>: from 2015 to November 2018,<br />
@@ -217,9 +219,8 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   facet_wrap(~axe, nrow = 2, scales = &quot;free&quot;) +
   theme_ipsum_rc() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_fill_viridis_c(option = &quot;cividis&quot;, direction = -1) +
-  theme(axis.text.y = element_blank())</code></pre>
-<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap3-1.png" width="960" /></p>
+  scale_fill_viridis_c(option = &quot;cividis&quot;, direction = -1)</code></pre>
+<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap3-1.png" width="1056" /></p>
 </div>
 <div class="footnotes">
 <hr />
