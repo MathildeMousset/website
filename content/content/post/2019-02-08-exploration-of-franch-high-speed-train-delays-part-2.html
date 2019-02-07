@@ -1,0 +1,922 @@
+---
+title: Exploration of French High Speed Trains Delays (part 2)
+author: Mathilde Mousset
+date: '2019-02-08'
+slug: exploration-of-franch-high-speed-train-delays-part-2
+categories: []
+tags:
+  - R
+  - data visualisation
+  - TidyTuesday
+---
+
+
+
+<p>I did not had time to explore milk consuption in the USA last week, and this week #TidyTuesday dataset does not really ignites my curiosity. But I would like to learn a little more about delays and cancellation of High Speed Trains in France. Likely out of pure pettiness<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> .</p>
+<p>So for my non-canon #Tidytuesday, I will explore a dataset per line between towns (what the SNCF call “links”, or liaison in French). This dataset gives the detail of the number of trains, number of cancelled trains and number of late trains between towns, so it’s going to be fun to see which lines and stations suffer from most delay.</p>
+<p>High Speed Trains delays, part 1</p>
+<p>Originally, for this post, I wanted to map the data on a French map, but I encountered a bit of trouble in getting the GPS coordinates of the stations, and I am still perfecting my fuzzyjoining<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>. This might be a story for later, including the crushing of my cute naivety concerning name harmonizing in datasets made available by the same company.</p>
+<div id="the-data" class="section level1">
+<h1>The data</h1>
+<p>The dataset were downloaded on the 1st of February 2019 on the <a href="https://ressources.data.sncf.com/explore/dataset/regularite-mensuelle-tgv-aqst/export/?sort=nombre_de_trains_annules&amp;q=gare&amp;dataChart=eyJxdWVyaWVzIjpbeyJjaGFydHMiOlt7InR5cGUiOiJzcGxpbmUiLCJmdW5jIjoiQVZHIiwieUF4aXMiOiJleHRlcm5lcyIsInNjaWVudGlmaWNEaXNwbGF5Ijp0cnVlLCJjb2xvciI6IiNhNmQ4NTQifV0sInhBeGlzIjoicGVyaW9kZSIsIm1heHBvaW50cyI6IiIsInRpbWVzY2FsZSI6Im1vbnRoIiwic29ydCI6IiIsImNvbmZpZyI6eyJkYXRhc2V0IjoicmVndWxhcml0ZS1tZW5zdWVsbGUtdGd2LWFxc3QiLCJvcHRpb25zIjp7InNvcnQiOiJub21icmVfZGVfdHJhaW5zX2FubnVsZXMifX19XSwidGltZXNjYWxlIjoiIiwiZGlzcGxheUxlZ2VuZCI6dHJ1ZSwiYWxpZ25Nb250aCI6dHJ1ZX0%3D">Open Data of the French train company</a>.</p>
+<p>The dataframe contains information on the number of trains, cancelled trains and delayed trains between two stations (links) for each month from 2015 to 2018.</p>
+<p>The SNCF has several ways of quantifying train delays.</p>
+<p>The <strong>punctuality</strong> is the number of trains that left on time at their departure station, over all trains that left this station. Expressed in <em>percentage</em> of trains that departed <strong>that month</strong> and <strong>on this link</strong>.</p>
+<p>The <strong>regularity</strong> is the number of trains that arrived <em>on time</em> at the <strong>terminus</strong> of the line of the number of trains that ran on the whole line.</p>
+<p>A train can be counted in several “links”, but will be counted only once for the regularity. For example, let’s consider a (simplifed) line between Paris and Montpellier, with an intermediate stop in Lyon. <em>Paris - Lyon</em> is one link, <em>Lyon - Montpellier</em> is another link. A train leaving late from Paris will thus be counted as late in the <em>Paris - Lyon</em> link, and also in the <em>Lyon - Montpellier</em> link. However, it will be counted only once for the estimation of the regularity, which is fair if one wants national data on cumulative delay over the whole line. I am, however, interested in the distribution of dealy over links, so we will not discuss the <em>regularity</em> here.</p>
+<div id="technical-information" class="section level2">
+<h2>Technical information</h2>
+<p>Here, trip_duration is the expected duration of the trip in min.</p>
+<p>The dataset provides some information on the source of delay. Here is the classification:</p>
+<ul>
+<li><p><em>External causes</em>: delay due to external problems (e.g. bad wheather, obstacles on train tracks, suspicious luggage (aka the-forgotten-luggage-of-doom-that-could-be-a-bomb), material destruction, strike etc.)</p></li>
+<li><p><em>Railway infrastructure</em>: maintenance, work on the railway network</p></li>
+<li><p><em>Traffic management</em>: problems in managing the rail traffic, in connecting the different networks. Which network (car network? TGV / Intercité network), I have no idea.</p></li>
+<li><p><em>Driving meterial</em>: I suppose that it means that there was a problem on the train itself (as opposed to rail or other aspect of infrastructure).</p></li>
+<li><p><em>Station</em>: delays due to station management and re-use of material. I suppose this encompasses the people (as in the driver is sick?) and waiting for a train that is late and need to be used for another trip.</p></li>
+<li><p><em>Users</em>: delays due to having to deal with users (too high number of users, trying to ensure a connection)</p></li>
+</ul>
+<p>Also, on a totally unrelated note, todays’s colors come rom the very cute <code>wesanderson</code> package. Because I can.</p>
+</div>
+</div>
+<div id="data-wrangling" class="section level1">
+<h1>Data wrangling</h1>
+<p>I will first sort the dates (turn them in ordered factors).</p>
+<pre class="r"><code># Make year as ordered factor
+tgv$year_ordered = factor(tgv$year, ordered = TRUE)
+
+# Get months in English
+tgv$month_english = factor(tgv$month_number, ordered = TRUE)
+levels(tgv$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;, &quot;March&quot;, &quot;April&quot;, &quot;May&quot;, &quot;June&quot;, &quot;July&quot;, &quot;August&quot;, &quot;September&quot;,  &quot;October&quot;, &quot;November&quot;, &quot;December&quot;)</code></pre>
+<p>Then put the stations in title case, with the <code>str_to_title</code> function. Because I find it prettier.</p>
+<pre class="r"><code>tgv &lt;- mutate(tgv, 
+              departure_station = str_to_title(departure_station),
+              arrival_station = str_to_title(arrival_station))</code></pre>
+<p>I will then make a departure and an arrival dataset, to simplify things.</p>
+<pre class="r"><code>tgv_departure &lt;- tgv %&gt;% 
+  select(year,
+         month_number,
+         year_ordered,
+         month_english,
+         service,
+         departure_station,
+         trip_duration,
+         expected_nb_trains,
+         nb_cancelled_trains,
+         contains(&quot;departure&quot;))
+
+
+tgv_arrival &lt;- tgv %&gt;% 
+  select(year,
+         month_number,
+         year_ordered,
+         month_english,
+         service,
+         departure_station,
+         trip_duration,
+         expected_nb_trains,
+         nb_cancelled_trains,
+         contains(&quot;arrival&quot;))</code></pre>
+</div>
+<div id="cancelled-trains" class="section level1">
+<h1>Cancelled trains</h1>
+<p>Wow, some links had a lot of cancelled trains some months.</p>
+<pre class="r"><code>tgv %&gt;% 
+  count(nb_cancelled_trains) %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">nb_cancelled_trains</th>
+<th align="right">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0</td>
+<td align="right">2337</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">897</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">489</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">345</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="right">194</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">169</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">96</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">100</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">74</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="right">60</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">45</td>
+</tr>
+<tr class="even">
+<td align="right">11</td>
+<td align="right">32</td>
+</tr>
+<tr class="odd">
+<td align="right">12</td>
+<td align="right">27</td>
+</tr>
+<tr class="even">
+<td align="right">13</td>
+<td align="right">32</td>
+</tr>
+<tr class="odd">
+<td align="right">14</td>
+<td align="right">24</td>
+</tr>
+<tr class="even">
+<td align="right">15</td>
+<td align="right">18</td>
+</tr>
+<tr class="odd">
+<td align="right">16</td>
+<td align="right">22</td>
+</tr>
+<tr class="even">
+<td align="right">17</td>
+<td align="right">15</td>
+</tr>
+<tr class="odd">
+<td align="right">18</td>
+<td align="right">16</td>
+</tr>
+<tr class="even">
+<td align="right">19</td>
+<td align="right">15</td>
+</tr>
+<tr class="odd">
+<td align="right">20</td>
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="right">21</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">22</td>
+<td align="right">13</td>
+</tr>
+<tr class="even">
+<td align="right">23</td>
+<td align="right">10</td>
+</tr>
+<tr class="odd">
+<td align="right">24</td>
+<td align="right">8</td>
+</tr>
+<tr class="even">
+<td align="right">25</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">26</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="right">27</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">28</td>
+<td align="right">5</td>
+</tr>
+<tr class="even">
+<td align="right">29</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">30</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">31</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="right">32</td>
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="right">33</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">34</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="right">35</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">36</td>
+<td align="right">9</td>
+</tr>
+<tr class="even">
+<td align="right">37</td>
+<td align="right">9</td>
+</tr>
+<tr class="odd">
+<td align="right">38</td>
+<td align="right">5</td>
+</tr>
+<tr class="even">
+<td align="right">39</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="right">40</td>
+<td align="right">9</td>
+</tr>
+<tr class="even">
+<td align="right">41</td>
+<td align="right">8</td>
+</tr>
+<tr class="odd">
+<td align="right">42</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="right">43</td>
+<td align="right">9</td>
+</tr>
+<tr class="odd">
+<td align="right">44</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">45</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">46</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">47</td>
+<td align="right">6</td>
+</tr>
+<tr class="odd">
+<td align="right">48</td>
+<td align="right">5</td>
+</tr>
+<tr class="even">
+<td align="right">49</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">50</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="right">51</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">52</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">53</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="right">54</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">55</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">56</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">57</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">58</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">59</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">60</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">61</td>
+<td align="right">6</td>
+</tr>
+<tr class="odd">
+<td align="right">62</td>
+<td align="right">5</td>
+</tr>
+<tr class="even">
+<td align="right">63</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">64</td>
+<td align="right">5</td>
+</tr>
+<tr class="even">
+<td align="right">65</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">66</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">67</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="right">68</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="right">69</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">70</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">71</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="right">72</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="right">74</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="right">75</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">76</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">78</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">79</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">81</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">82</td>
+<td align="right">6</td>
+</tr>
+<tr class="odd">
+<td align="right">83</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">84</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="right">85</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">86</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">87</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">88</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">89</td>
+<td align="right">5</td>
+</tr>
+<tr class="even">
+<td align="right">90</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="right">91</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">92</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">94</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">95</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="right">96</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">97</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">98</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">100</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="right">101</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">102</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="right">103</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">105</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">106</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">107</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">108</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">110</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">111</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">112</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">113</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">115</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">118</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">119</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">120</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">121</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">122</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">124</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">126</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">127</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">128</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">129</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">133</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">134</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">135</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">136</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">138</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">139</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="right">141</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">142</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">146</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">147</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">148</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">149</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">150</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">152</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">153</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">155</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">156</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">157</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">160</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">162</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">168</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">169</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">176</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">177</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">178</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">179</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">180</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">184</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">195</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">200</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">222</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">224</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">229</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">241</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">251</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">252</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">258</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">266</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="right">279</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<div id="trip-length-and-cancellation-rates" class="section level2">
+<h2>Trip length and cancellation rates</h2>
+<p>Let’s see whether the cancellation rates change with trip length. Points represent the average trip length of a link, with the month rate of cancellation for this link.</p>
+<pre class="r"><code>tgv %&gt;%
+  mutate(cancelation_rate = nb_cancelled_trains / expected_nb_trains) %&gt;% 
+  ggplot(aes(x = trip_duration, y = cancelation_rate)) +
+  geom_point(alpha = 0.4, size = 2, colour = &quot;#3B9AB2&quot;) +
+  geom_smooth(colour = &quot;#EBCC2A&quot;) +
+  facet_wrap(~year_ordered) +
+  labs(title = &quot;French High Speed Train cancellation rates and train duration&quot;,
+       caption = &quot;Cancellation rate do not seem to increase much with trip lenght&quot;,
+       subtitle = &quot;Data: data.sncf.com&quot;,
+       x = &quot;Expected trip duration&quot;,
+       y = &quot;Cancellation rates (%)&quot;,
+       fill = &quot;Cancellation rates&quot;) +
+  theme_ipsum_rc()</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;gam&#39; and formula &#39;y ~ s(x, bs = &quot;cs&quot;)&#39;</code></pre>
+<p><img src="/content/post/2019-02-08-exploration-of-franch-high-speed-train-delays-part-2_files/figure-html/unnamed-chunk-2-1.png" width="768" /></p>
+<p>There is no obvious signal of here.</p>
+</div>
+<div id="cancellation-rates-per-station-accross-years" class="section level2">
+<h2>Cancellation rates per station accross years</h2>
+<pre class="r"><code>tgv_departure_year &lt;- tgv_departure %&gt;% 
+  group_by(departure_station, year_ordered) %&gt;% 
+  summarise(expected_trains  = sum(expected_nb_trains, na.rm = TRUE),
+            cancelled_trains = sum(nb_cancelled_trains, na.rm = TRUE),
+            cancelation_rate = 100*cancelled_trains / expected_trains) %&gt;% 
+  ungroup()</code></pre>
+<pre class="r"><code>tgv_departure_year %&gt;% 
+  mutate(departure_station = fct_reorder(departure_station, cancelation_rate)) %&gt;% 
+  ggplot(aes(x = departure_station, y = year_ordered)) +
+  geom_tile(aes(fill = cancelation_rate)) +
+  coord_flip() +
+  labs(title = &quot;French High Speed Train cancellation rates&quot;,
+       subtitle = &quot;Data: data.sncf.com&quot;,
+       x = &quot;Departure station&quot;,
+       y = &quot;&quot;,
+       fill = &quot;Cancellation rates (%)&quot;) +
+  theme_ipsum_rc() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  #scale_fill_viridis_c(option = &quot;cividis&quot;, direction = -1) +
+  scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
+                                             100,
+                                             type = &quot;continuous&quot;))</code></pre>
+<p><img src="/content/post/2019-02-08-exploration-of-franch-high-speed-train-delays-part-2_files/figure-html/unnamed-chunk-4-1.png" width="960" /></p>
+<p>Wow, the effect of the month-long strike of 2018 is very, <em>very</em> clear. And there seem to be a lot of cancellation in 2016 too.</p>
+<p>According to the open data of the <a href="%22https://www.ouest-france.fr/economie/transports/sncf/infographies-sncf-depuis-1947-pas-une-annee-sans-mouvement-social-5621071%22">SNCF</a>, 2016 was one of the 10 biggest strike since 1947.</p>
+<p>The data for 2018 is not yet in the <a href="%22https://data.sncf.com/explore/dataset/mouvements-sociaux-depuis-1947/table/?sort=date&amp;dataChart=eyJ0aW1lc2NhbGUiOiIiLCJxdWVyaWVzIjpbeyJ4QXhpcyI6ImRhdGUiLCJzb3J0IjoiIiwibWF4cG9pbnRzIjoiIiwiY2hhcnRzIjpbeyJ5QXhpcyI6ImpvdXJuZWVzX3BlcmR1ZXMiLCJmdW5jIjoiU1VNIiwiY29sb3IiOiIjNjZjMmE1IiwidHlwZSI6InNwbGluZSIsInNjaWVudGlmaWNEaXNwbGF5Ijp0cnVlfV0sInRpbWVzY2FsZSI6InllYXIiLCJjb25maWciOnsiZGF0YXNldCI6Im1vdXZlbWVudHMtc29jaWF1eC1kZXB1aXMtMTk0NyIsIm9wdGlvbnMiOnsic29ydCI6ImRhdGUifX0sInNlcmllc0JyZWFrZG93biI6IiIsInNlcmllc0JyZWFrZG93blRpbWVzY2FsZSI6IiJ9XSwiZGlzcGxheUxlZ2VuZCI6dHJ1ZSwiYWxpZ25Nb250aCI6dHJ1ZX0%3D%22">SNCF open data about strikes</a> but 2018 will remain in the French memory<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a> as the 3 month-long strike, the longest in the past 30 years. So it is not suprising that 2018 is a bad year in terms of train cancellation. Trains were hell (personnal observation).</p>
+</div>
+<div id="worst-departure-station" class="section level2">
+<h2>Worst departure station</h2>
+<p>Is there an all-time bad station?</p>
+<pre class="r"><code>tgv_departure_all &lt;- tgv_departure %&gt;% 
+  group_by(departure_station) %&gt;% 
+  summarise(expected_trains  = sum(expected_nb_trains, 
+                                   na.rm = TRUE),
+            cancelled_trains = sum(nb_cancelled_trains, 
+                                   na.rm = TRUE),
+            cancellation_rate = 100*cancelled_trains / expected_trains) %&gt;% 
+  mutate(departure_station = fct_reorder(departure_station,
+                                         cancellation_rate))</code></pre>
+<pre class="r"><code>tgv_departure_all %&gt;% 
+  ggplot(aes(x = departure_station, y = cancellation_rate, fill = expected_trains)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = &quot;All-time cancellation rates of High Speed Train per departure station&quot;,
+       subtitle = &quot;Data: data.sncf.com&quot;,
+       y = &quot;Train cancellation rate (%)&quot;,
+       x = &quot;Departure station&quot;,
+       fill = &quot;Number of planned trains&quot;) +
+  theme_ipsum_rc() +
+  scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
+                                             100,
+                                             type = &quot;continuous&quot;))</code></pre>
+<p><img src="/content/post/2019-02-08-exploration-of-franch-high-speed-train-delays-part-2_files/figure-html/unnamed-chunk-6-1.png" width="1152" /></p>
+<pre class="r"><code>#scale_fill_viridis_c(option = &quot;cividis&quot;, direction = -1)</code></pre>
+<p>We can see two things. First, the stations with the greatest number of trains are pretty much in the middle of the other stations in terms of cancellation. So the cancellation do not result from just a huge service (and the likely technical problems associated with managing train and people at a bigger scale).</p>
+<p>We can also see that Madrid has a pretty bad reccord here, as well as Marnes la Vallee. However, we saw previously that we only have data in 2018 for these stations, and that 2018 was a weird year. Let’s see what happens if we focus on the years 2015-2017.</p>
+<pre class="r"><code>tgv_departure %&gt;% 
+  filter(year != 2018) %&gt;% 
+  group_by(departure_station) %&gt;% 
+  summarise(expected_trains  = sum(expected_nb_trains, 
+                                   na.rm = TRUE),
+            cancelled_trains = sum(nb_cancelled_trains, 
+                                   na.rm = TRUE),
+            cancellation_rate = 100*cancelled_trains / expected_trains) %&gt;% 
+  mutate(departure_station = fct_reorder(departure_station,
+                                         cancellation_rate)) %&gt;% 
+  ggplot(aes(x = departure_station, y = cancellation_rate, fill = expected_trains)) +
+  geom_hline(yintercept = 1, 
+             linetype = &quot;dashed&quot;, 
+             colour = &quot;grey70&quot;, 
+             size = 1) +
+  geom_hline(yintercept = 2, 
+             linetype = &quot;dashed&quot;, 
+             colour = &quot;grey70&quot;, 
+             size = 1) +
+  geom_col() +
+  coord_flip() +
+  labs(title = &quot;All-time cancellation rates of High Speed Train per departure station,\nwithout 2018&quot;,
+       subtitle = &quot;Data: data.sncf.com&quot;,
+       y = &quot;Train cancellation rate (%)&quot;,
+       x = &quot;Departure station&quot;,
+       fill = &quot;Number of planned trains&quot;) +
+  theme_ipsum_rc() +
+  scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
+                                             100,
+                                             type = &quot;continuous&quot;))</code></pre>
+<p><img src="/content/post/2019-02-08-exploration-of-franch-high-speed-train-delays-part-2_files/figure-html/unnamed-chunk-7-1.png" width="1152" /></p>
+<p>That stations that were supposed to host most departing trains do not seem to be associated with higher or lower cancellation rates.</p>
+<p>If I want to focus on the ones with more than 1% of cancelled trains, to shorten the graph:</p>
+<pre class="r"><code>tgv_departure %&gt;% 
+  filter(year != 2018) %&gt;% 
+  group_by(departure_station) %&gt;% 
+  summarise(expected_trains  = sum(expected_nb_trains, 
+                                   na.rm = TRUE),
+            cancelled_trains = sum(nb_cancelled_trains, 
+                                   na.rm = TRUE),
+            cancellation_rate = 100*cancelled_trains / expected_trains) %&gt;% 
+  filter(cancellation_rate &gt;= 1) %&gt;% 
+  mutate(departure_station = fct_reorder(departure_station,
+                                         cancellation_rate)) %&gt;% 
+  ggplot(aes(x = departure_station, y = cancellation_rate, fill = expected_trains)) +
+  geom_hline(yintercept = 1, 
+             linetype = &quot;dashed&quot;, 
+             colour = &quot;grey70&quot;, 
+             size = 2) +
+  geom_hline(yintercept = 2, 
+             linetype = &quot;dashed&quot;, 
+             colour = &quot;grey70&quot;, 
+             size = 2) +
+  geom_col() +
+  coord_flip() +
+  labs(title = &quot;All-time cancellation rates of High Speed Train per departure station,\n2015 - 2018&quot;,
+       subtitle = &quot;Data: data.sncf.com&quot;,
+       y = &quot;Train cancellation rate (%)&quot;,
+       x = &quot;Departure station&quot;,
+       fill = &quot;Number of planned trains&quot;) +
+  theme_ipsum_rc() +
+  scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
+                                             100,
+                                             type = &quot;continuous&quot;))</code></pre>
+<p><img src="/content/post/2019-02-08-exploration-of-franch-high-speed-train-delays-part-2_files/figure-html/unnamed-chunk-8-1.png" width="1152" /></p>
+</div>
+<div id="comparison-2017-and-2016-per-station" class="section level2">
+<h2>Comparison 2017 and 2016, per station</h2>
+<p>Ok, since the 2018 strike is still vivid in my memory, let’s graphically address the difference between cancellation rates in 2017 and 2018 to remember how bad it was.</p>
+<pre class="r"><code>tgv_departure %&gt;% 
+  filter(year %in% c(2017, 2018)) %&gt;% 
+  group_by(departure_station, year_ordered, month_english) %&gt;% 
+  summarise(expected_trains  = sum(expected_nb_trains, na.rm = TRUE),
+            cancelled_trains = sum(nb_cancelled_trains, na.rm = TRUE),
+            cancellation_rate = 100*cancelled_trains / expected_trains) %&gt;%
+  select(-expected_trains, -cancelled_trains) %&gt;% 
+  #spread(year_ordered, cancellation_rate) %&gt;% 
+  
+  ggplot(aes(x = departure_station, 
+             y = cancellation_rate,
+             group = departure_station, 
+             colour = year_ordered)) +
+  geom_hline(yintercept = 20, 
+             linetype = &quot;dashed&quot;, 
+             colour = &quot;black&quot;, 
+             size = 1) +
+  geom_hline(yintercept = 60, 
+             linetype = &quot;dashed&quot;, 
+             colour = &quot;black&quot;, 
+             size = 1) +
+  geom_line(size = 2, colour = &quot;grey70&quot;, alpha = 0.6) +
+  geom_point(size = 3) +
+  coord_flip() +
+  facet_wrap(~month_english) +
+  scale_colour_manual(values = c(&quot;#3B9AB2&quot;, &quot;#F21A00&quot;)) +
+  labs(title = &quot;Train cancellation rates in 2017 and 2018 per station&quot;,
+       subtitle = &quot;2018 was a baaaaad year!&quot;,
+       y = &quot;Monthly train cancellation rate (%)&quot;,
+       x = &quot;Departure station&quot;,
+       colour = &quot;Year&quot;) +
+  theme_ipsum_rc() +
+  annotate(geom = &quot;text&quot;, x = 55, y = 67, 
+           label = &quot;60%&quot;,
+           color = &quot;Black&quot;) +
+    annotate(geom = &quot;text&quot;, x = 55, y = 27, 
+           label = &quot;20%&quot;,
+           color = &quot;Black&quot;)</code></pre>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="/content/post/2019-02-08-exploration-of-franch-high-speed-train-delays-part-2_files/figure-html/unnamed-chunk-9-1.png" width="1440" /></p>
+<p>Yep, it was bad.</p>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>good data to back some serious complaining makes it sweeter<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>There is a special hell for people who chose to summarise a dataset using different names than the official ones form their own company for the stations…<a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>or at least in mine<a href="#fnref3">↩</a></p></li>
+</ol>
+</div>

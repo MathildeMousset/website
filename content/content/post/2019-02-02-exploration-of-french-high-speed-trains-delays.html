@@ -1,5 +1,5 @@
 ---
-title: Exploration of French High Speed Trains Delays
+title: Exploration of French High Speed Trains Delays (part 1)
 author: Mathilde Mousset
 date: '2019-02-02'
 slug: exploration-of-french-high-speed-trains-delays
@@ -134,7 +134,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
        fill = &quot;Rate of trains on time&quot;) +
   theme_ipsum_rc() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_fill_viridis_c(option = &quot;cividis&quot;, direction = -1)</code></pre>
+  scale_fill_viridis_c(option = &quot;cividis&quot;)</code></pre>
 <p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap1-1.png" width="672" /></p>
 <p>This was a good idea, as this representation allows a better comparison of year. We can see that 2018 was a bad year in terms of train delays. There was a very long strike in the spring and summer of that year, and it probably affected train punctuality.</p>
 <div id="train-regularity" class="section level2">
@@ -197,7 +197,8 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
        subtitle = &quot;Per line&quot;,
        caption = &quot;Data: data.sncf.com&quot;,
        x = &quot;Month&quot;,
-       y = &quot;Percentage of trains&quot;) +
+       y = &quot;Percentage of trains&quot;,
+       colour = &quot;Axe&quot;) +
   theme_ipsum_rc() +
   ylim(60, 100) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
@@ -219,7 +220,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   facet_wrap(~axe, nrow = 2, scales = &quot;free&quot;) +
   theme_ipsum_rc() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_fill_viridis_c(option = &quot;cividis&quot;, direction = -1)</code></pre>
+  scale_fill_viridis_c(option = &quot;cividis&quot;)</code></pre>
 <p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap3-1.png" width="1056" /></p>
 </div>
 <div class="footnotes">

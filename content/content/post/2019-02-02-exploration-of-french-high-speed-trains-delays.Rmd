@@ -1,5 +1,5 @@
 ---
-title: Exploration of French High Speed Trains Delays
+title: Exploration of French High Speed Trains Delays (part 1)
 author: Mathilde Mousset
 date: '2019-02-02'
 slug: exploration-of-french-high-speed-trains-delays
@@ -34,6 +34,7 @@ tgv_axes <- read.csv("2019-02-02-regularite-mensuelle-tgv-axes.csv",
 ```
 
 # The data
+
 
 Today I explore two small datasets from the French train company, the [SNCF](https://www.sncf.com/en). I chanced upon this dataset yesterday when I was exploring the open French datasets. 
 
@@ -150,7 +151,7 @@ tgv_global %>%
        fill = "Rate of trains on time") +
   theme_ipsum_rc() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_fill_viridis_c(option = "cividis", direction = -1)
+  scale_fill_viridis_c(option = "cividis")
 ```
 
 
@@ -229,7 +230,8 @@ tgv_axes %>%
        subtitle = "Per line",
        caption = "Data: data.sncf.com",
        x = "Month",
-       y = "Percentage of trains") +
+       y = "Percentage of trains",
+       colour = "Axe") +
   theme_ipsum_rc() +
   ylim(60, 100) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
@@ -256,7 +258,7 @@ tgv_axes %>%
   facet_wrap(~axe, nrow = 2, scales = "free") +
   theme_ipsum_rc() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_fill_viridis_c(option = "cividis", direction = -1)
+  scale_fill_viridis_c(option = "cividis")
 ```
 
 
