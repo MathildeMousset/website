@@ -119,7 +119,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   ylim(70, 90) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_colour_viridis_c()</code></pre>
-<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <p>For some reason there is a peak of delay in June or July every year. Is this because a lot of people leave on holidays at this period? But then I would expect lots of problems in August or December, and these months do not seem to be much affected.</p>
 <p>Since time data is often readily plotted with heat-maps, I use the <code>geom_tile</code> geom from the <code>ggplot2</code> package to plot the punctuality over time</p>
 <pre class="r"><code>tgv_global %&gt;% 
@@ -135,7 +135,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   theme_ipsum_rc() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_fill_viridis_c(option = &quot;cividis&quot;)</code></pre>
-<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap1-1.png" width="672" /></p>
+<p><img src="/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap1-1.png" width="672" /></p>
 <p>This was a good idea, as this representation allows a better comparison of year. We can see that 2018 was a bad year in terms of train delays. There was a very long strike in the spring and summer of that year, and it probably affected train punctuality.</p>
 <div id="train-regularity" class="section level2">
 <h2>Train regularity</h2>
@@ -157,7 +157,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   theme_ipsum_rc() +
   ylim(70, 100) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5))</code></pre>
-<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>Both punctuality and regularity covary strongly. The main difference is that the regularity allow them to have seemingly higher rates of punctual trains, because it decreases the impact of delays up to 15 minutes on longer trips.</p>
 <p>Since both rates are similar, I will report only the punctuality from now on.</p>
 </div>
@@ -184,7 +184,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
        x = &quot;Month&quot;,
        y = &quot;Percentage of trains&quot;) +
   theme_ipsum_rc()</code></pre>
-<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>From this plot, it is obvious that the European axes and the OUIGO (the low-cost SNCF service) suffer from more delays than the other lines.</p>
 <p>Let’s see if it’s true every year.</p>
 <pre class="r"><code>tgv_axes %&gt;% 
@@ -203,7 +203,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   ylim(60, 100) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_colour_viridis_d(option = &quot;cividis&quot;)</code></pre>
-<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-6-1.png" width="960" /></p>
+<p><img src="/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/unnamed-chunk-6-1.png" width="960" /></p>
 <p>In 2015, the OUIGO data were not provided (although the train have ran since 2013). From 2016, its punctuality was similar to the TGVs that cross borders, that is, departing more often with a delay than the others.</p>
 <p>I am curious at the peak of improved punctuality in 2018 in July. The national data showed a peak of delay at this time. The SNCF insist that the national average is not <em>just</em> the average over these data per lines, and that the rates depend on the number of trains that depart at each station, so this pattern is possible. We also need to remember that trains that go between the axes (say, from Atlantique to South-East) are accounted in both axes. If these trains are proportionaly more on time than trains within axes, they could bias punctuality upwards. I am not sure why that would be the case though.</p>
 <p>This visualisation is not very satisfying, it is difficult to distinguish all the categories. I think we can do a better job with an heat-map.</p>
@@ -221,7 +221,7 @@ levels(tgv_axes$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;
   theme_ipsum_rc() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_fill_viridis_c(option = &quot;cividis&quot;)</code></pre>
-<p><img src="/content/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap3-1.png" width="1056" /></p>
+<p><img src="/post/2019-02-02-exploration-of-french-high-speed-trains-delays_files/figure-html/heatmap3-1.png" width="1056" /></p>
 </div>
 <div class="footnotes">
 <hr />

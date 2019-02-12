@@ -1,15 +1,16 @@
 ---
 title: Exploration of French High Speed Trains Delays (part 2)
 author: Mathilde Mousset
-date: '2019-02-08'
-slug: exploration-of-franch-high-speed-train-delays-part-2
-categories: []
+date: '2019-02-12'
 tags:
-  - R
   - data visualisation
+  - R
+  - SNCF
   - TidyTuesday
-editor_options: 
-  chunk_output_type: console
+slug: exploration-of-french-high-speed-trains-delays-part-2
+output:
+  blogdown::html_page:
+    toc: yes
 ---
 
 
@@ -26,12 +27,14 @@ library(knitr)
 
 library(wesanderson)
 
+# ./content/post/
+
 # Import data
-tgv <- read_delim("./content/post/2019-02-08-regularite-mensuelle-tgv-aqst.csv",
+tgv <- read_delim("2019-02-08-regularite-mensuelle-tgv-aqst.csv",
                   ";", escape_double = FALSE, trim_ws = TRUE)
 ```
 
-I did not have time to explore milk consuption in the USA last week, and this week #TidyTuesday dataset does not really ignites my curiosity. But I would like to learn a little more about delays and cancellation of High Speed Trains in France.
+I did not have time to explore milk consuption in the USA last week, and this week #TidyTuesday dataset does not really ignites my curiosity. But I would like to learn a little more about delays and cancellation of High Speed Trains in France. 
 
 <center>
 ![](https://media.giphy.com/media/3oKIPd0cPwxKl2zbPi/giphy.gif)
@@ -39,7 +42,7 @@ I did not have time to explore milk consuption in the USA last week, and this we
 
 Likely out of pure pettiness^[good data to back some serious complaining makes it sweeter].
 
-So for my non-canon #Tidytuesday, I will explore a dataset per line between towns (what the SNCF call "links", or liaison in French). This dataset gives the detail of the number of trains, number of cancelled trains and number of late trains between to given stations, so it's going to be fun to see which lines and stations suffer from most delay.
+So for my non-canon #Tidytuesday, carry on the work from the previous post and explore a dataset per line between towns (what the SNCF call "links", or liaison in French). This dataset gives the detail of the number of trains, number of cancelled trains and number of late trains between to given stations, so it's going to be fun to see which lines and stations suffer from most delay.
 
 Originally, for this post, I wanted to map the data on a French map, but I encountered a bit of trouble in getting the GPS coordinates of the stations, and I am still perfecting my fuzzyjoining^[There is a special hell for people who chose to summarise a dataset using different names than the official ones form their own company for the stations...]. This might be a story for later, including the crushing of my cute naivety concerning name harmonizing in datasets made available within the same company.
 
