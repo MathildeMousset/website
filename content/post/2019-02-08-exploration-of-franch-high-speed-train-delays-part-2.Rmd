@@ -27,7 +27,7 @@ library(knitr)
 library(wesanderson)
 
 # Import data
-tgv <- read_delim("content/content/post/2019-02-08-regularite-mensuelle-tgv-aqst.csv",
+tgv <- read_delim("./content/post/2019-02-08-regularite-mensuelle-tgv-aqst.csv",
                   ";", escape_double = FALSE, trim_ws = TRUE)
 ```
 
@@ -377,13 +377,7 @@ tgv_departure %>%
            color = "Black")
 ``` 
 
-Yep, it was bad.
-
-
-
-
-
-
+Yep, it was that bad.
 
 
 # Problems at departure
