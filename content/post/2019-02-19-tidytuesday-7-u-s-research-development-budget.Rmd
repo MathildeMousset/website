@@ -1,5 +1,5 @@
 ---
-title: '#TidyTuesday 7: U.S. research & development budget'
+title: '#TidyTuesday 7: U.S. Research & Development Budget'
 author: Mathilde Mousset
 date: '2019-02-19'
 slug: tidytuesday-7-u-s-research-development-budget
@@ -29,15 +29,16 @@ First we import the data.
 read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv") %>% mutate(rd_budget_billion = rd_budget/(10^9)) -> feder_spendings
 ```
 
-We have a first look at the structure of the data. The data.frame is pretty straightforward: 
-- `department` the abbreviated name of the federal agencies
-- `year`
-- `rd_budget` the budget for research and development
-- `total_outlays` the money actually paid out by the U.S. Treasury
-- `GDP` the Gross Domestic Product, which represent the US economy
-- `discretionary_outlays` represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the [meaning]("https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/")
+We have a first look at the structure of the data. The data.frame is pretty straightforward:   
+- `department` the abbreviated name of the federal agencies  
+- `year`  
+- `rd_budget` the budget for research and development  
+- `total_outlays` the money actually paid out by the U.S. Treasury  
+- `GDP` the Gross Domestic Product, which represent the US economy  
+- `discretionary_outlays` represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the [meaning]("https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/")  
 
-I also created a column with the R&D budget in billions, because the numbers are easier to grasp then.
+
+I also created a column with the R&D budget in billions, because it makes numbers easier to grasp.
 
 ```{r}
 glimpse(feder_spendings)
@@ -46,9 +47,9 @@ glimpse(feder_spendings)
 
 ## Total R&D budget
 
-Since we are dealing with data through time, and with 14 categories, two types of visualization jumped to my mind: a heat map and a line plot. Both of them are pretty easy to make with `ggplot2`.
+Since we are dealing with data through time, and with 14 categories, two types of visualization jumped directly to my mind: a heat map and a line plot. Both of them are pretty easy to make with `ggplot2`.
 
-From the heat map, what is obvious is that some agencies receive far more budget than some others. **DOD** stands for the department of defence, and it seemed to be the singlets most funded agency. Anybody with even a varnish of history knowledge about the U.S. will expect that. **NASA** also have high founding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, **HHS** and **DOE** concern human health.
+From the heat map, what is obvious is that some agencies receive far more money than some others. **DOD** stands for the department of defence, and it seemed to be the singlets most funded agency, which anybody with even a varnish of history knowledge about the U.S. would expect. **NASA** also have high founding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, **HHS** and **DOE** perform health research.
 
 ```{r, heatmap_1}
 feder_spendings %>% 
@@ -66,7 +67,7 @@ feder_spendings %>%
   theme_ipsum_tw()
 ```
 
-Because of the huge variation of funding between agencies, this representation limits us in seeing the finer patterns. So let's go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free *y* scale.
+Because of the huge variation of funding between agencies, the heat map representation limits us in seeing the finer patterns. So let's go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free *y* scale.
 
 
 ```{r lines_1, fig.height= 15, fig.width=12}
@@ -92,7 +93,7 @@ feder_spendings %>%
         strip.text = element_text(face = "bold"))
 ```
 
-We can see that the budget of defence has steadily risen, with a bump in after year 2000. **NASA** budget was brutally reduced during the mid-eighties, but recovered and has been mostly stable since.The **NIH** and **NSF** budget have slowly increased over years, also **NIH** is now stagnating.
+We can see that the budget of defence has steadily risen, with a bump in after year 2000. **NASA** budget was brutally reduced during the mid-eighties, but recovered and has been mostly stable since.The **NIH** and **NSF** budget have slowly increased over years, although **NIH** is now stagnating.
 
 ## R&D budget relative to total federal budget
 
@@ -128,6 +129,7 @@ feder_spendings %>%
         strip.text = element_text(face = "bold"))
 ```
 
+Clearly, the decision has been to decrease investment in R&D over all agencies, and thus all thematics.
 
 
 ## R&D budget relative to GDP
@@ -161,7 +163,7 @@ feder_spendings %>%
         strip.text = element_text(face = "bold"))
 ```
 
-In recent year, the budget invested in research and development, compared to the GDP has been decreasing for pretty much all agencies.
+In recent years, the budget invested in research and development, compared to the GDP has been decreasing for pretty much all agencies.
 
 # Cumulative R&D budget over years
 
@@ -177,7 +179,7 @@ feder_spendings %>%
          department = fct_reorder(department, rd_rate)) -> feder_total
 ```
 
-Here again, we can see that the U.S. invested a *huge* amount of money in R&D for defence (over 2500 billion $) over the years. I cannot even understand what that sum of money means.
+Here again, we can see that the U.S. invested a *huge* amount of money in R&D for defence (over 2500 billion $) over the years. I cannot even understand what that sum of money means. 
 They invested a bit less than 2000 billion $ in health.
 
 ```{r col_1}

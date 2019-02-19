@@ -1,5 +1,5 @@
 ---
-title: '#TidyTuesday 7: U.S. research & development budget'
+title: '#TidyTuesday 7: U.S. Research & Development Budget'
 author: Mathilde Mousset
 date: '2019-02-19'
 slug: tidytuesday-7-u-s-research-development-budget
@@ -15,8 +15,14 @@ tags:
 
 <p>First we import the data.</p>
 <pre class="r"><code>read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv&quot;) %&gt;% mutate(rd_budget_billion = rd_budget/(10^9)) -&gt; feder_spendings</code></pre>
-<p>We have a first look at the structure of the data. The data.frame is pretty straightforward: - <code>department</code> the abbreviated name of the federal agencies - <code>year</code> - <code>rd_budget</code> the budget for research and development - <code>total_outlays</code> the money actually paid out by the U.S. Treasury - <code>GDP</code> the Gross Domestic Product, which represent the US economy - <code>discretionary_outlays</code> represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the <a href="%22https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/%22">meaning</a></p>
-<p>I also created a column with the R&amp;D budget in billions, because the numbers are easier to grasp then.</p>
+<p>We have a first look at the structure of the data. The data.frame is pretty straightforward:<br />
+- <code>department</code> the abbreviated name of the federal agencies<br />
+- <code>year</code><br />
+- <code>rd_budget</code> the budget for research and development<br />
+- <code>total_outlays</code> the money actually paid out by the U.S. Treasury<br />
+- <code>GDP</code> the Gross Domestic Product, which represent the US economy<br />
+- <code>discretionary_outlays</code> represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the <a href="%22https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/%22">meaning</a></p>
+<p>I also created a column with the R&amp;D budget in billions, because it makes numbers easier to grasp.</p>
 <pre class="r"><code>glimpse(feder_spendings)</code></pre>
 <pre><code>## Observations: 588
 ## Variables: 7
@@ -29,8 +35,8 @@ tags:
 ## $ rd_budget_billion     &lt;dbl&gt; 35.696, 12.513, 10.882, 9.226, 8.025, 2....</code></pre>
 <div id="total-rd-budget" class="section level2">
 <h2>Total R&amp;D budget</h2>
-<p>Since we are dealing with data through time, and with 14 categories, two types of visualization jumped to my mind: a heat map and a line plot. Both of them are pretty easy to make with <code>ggplot2</code>.</p>
-<p>From the heat map, what is obvious is that some agencies receive far more budget than some others. <strong>DOD</strong> stands for the department of defence, and it seemed to be the singlets most funded agency. Anybody with even a varnish of history knowledge about the U.S. will expect that. <strong>NASA</strong> also have high founding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, <strong>HHS</strong> and <strong>DOE</strong> concern human health.</p>
+<p>Since we are dealing with data through time, and with 14 categories, two types of visualization jumped directly to my mind: a heat map and a line plot. Both of them are pretty easy to make with <code>ggplot2</code>.</p>
+<p>From the heat map, what is obvious is that some agencies receive far more money than some others. <strong>DOD</strong> stands for the department of defence, and it seemed to be the singlets most funded agency, which anybody with even a varnish of history knowledge about the U.S. would expect. <strong>NASA</strong> also have high founding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, <strong>HHS</strong> and <strong>DOE</strong> perform health research.</p>
 <pre class="r"><code>feder_spendings %&gt;% 
   ggplot(aes(x = department, y = year, 
              fill = rd_budget_billion)) +
@@ -44,8 +50,8 @@ tags:
        caption = &quot;Source data: American Association for the Advancement of Science\nInflation adjusted dollars&quot;) +
   scale_fill_viridis_c(option = &quot;inferno&quot;) +
   theme_ipsum_tw()</code></pre>
-<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/heatmap_1-1.png" width="672" /></p>
-<p>Because of the huge variation of funding between agencies, this representation limits us in seeing the finer patterns. So let’s go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free <em>y</em> scale.</p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/heatmap_1-1.png" width="672" /></p>
+<p>Because of the huge variation of funding between agencies, the heat map representation limits us in seeing the finer patterns. So let’s go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free <em>y</em> scale.</p>
 <pre class="r"><code>feder_spendings %&gt;% 
   ggplot(aes( x = year, y = rd_budget_billion, 
               colour = department, 
@@ -66,8 +72,8 @@ tags:
   theme(legend.position = &quot;none&quot;,
         panel.grid.major = element_blank(),
         strip.text = element_text(face = &quot;bold&quot;))</code></pre>
-<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_1-1.png" width="1152" /></p>
-<p>We can see that the budget of defence has steadily risen, with a bump in after year 2000. <strong>NASA</strong> budget was brutally reduced during the mid-eighties, but recovered and has been mostly stable since.The <strong>NIH</strong> and <strong>NSF</strong> budget have slowly increased over years, also <strong>NIH</strong> is now stagnating.</p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_1-1.png" width="1152" /></p>
+<p>We can see that the budget of defence has steadily risen, with a bump in after year 2000. <strong>NASA</strong> budget was brutally reduced during the mid-eighties, but recovered and has been mostly stable since.The <strong>NIH</strong> and <strong>NSF</strong> budget have slowly increased over years, although <strong>NIH</strong> is now stagnating.</p>
 </div>
 <div id="rd-budget-relative-to-total-federal-budget" class="section level2">
 <h2>R&amp;D budget relative to total federal budget</h2>
@@ -98,7 +104,8 @@ tags:
   theme(legend.position = &quot;none&quot;,
         panel.grid.major = element_blank(),
         strip.text = element_text(face = &quot;bold&quot;))</code></pre>
-<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_2-1.png" width="1152" /></p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_2-1.png" width="1152" /></p>
+<p>Clearly, the decision has been to decrease investment in R&amp;D over all agencies, and thus all thematics.</p>
 </div>
 <div id="rd-budget-relative-to-gdp" class="section level2">
 <h2>R&amp;D budget relative to GDP</h2>
@@ -127,8 +134,8 @@ tags:
   theme(legend.position = &quot;none&quot;,
         panel.grid.major = element_blank(),
         strip.text = element_text(face = &quot;bold&quot;))</code></pre>
-<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_3-1.png" width="1152" /></p>
-<p>In recent year, the budget invested in research and development, compared to the GDP has been decreasing for pretty much all agencies.</p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_3-1.png" width="1152" /></p>
+<p>In recent years, the budget invested in research and development, compared to the GDP has been decreasing for pretty much all agencies.</p>
 </div>
 <div id="cumulative-rd-budget-over-years" class="section level1">
 <h1>Cumulative R&amp;D budget over years</h1>
@@ -161,7 +168,7 @@ tags:
        subtitle = &quot;Total invesments in the past 40 years have been huge in defence, and moderate in health&quot;,
        caption = &quot;Source data: American Association for the Advancement of Science\nInflation adjusted dollars&quot;) +
   theme_ipsum_tw()</code></pre>
-<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/col_1-1.png" width="672" /></p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/col_1-1.png" width="672" /></p>
 </div>
 <div id="a-litte-focus-on-the-national-science-fundation" class="section level1">
 <h1>A litte focus on the National Science Fundation</h1>
@@ -186,7 +193,7 @@ tags:
   theme_ipsum_tw() +
   theme(legend.position = &quot;none&quot;,
         panel.grid.major = element_blank())</code></pre>
-<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/nsf_1-1.png" width="672" /></p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/nsf_1-1.png" width="672" /></p>
 <pre class="r"><code>feder_spendings %&gt;% 
   filter(department == &quot;NSF&quot;) %&gt;% 
   mutate(rd_rate = rd_budget / gdp) %&gt;% 
@@ -209,5 +216,5 @@ tags:
   theme_ipsum_tw() +
   theme(legend.position = &quot;none&quot;,
         panel.grid.major = element_blank())</code></pre>
-<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/nsf_2-1.png" width="672" /></p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/nsf_2-1.png" width="672" /></p>
 </div>
