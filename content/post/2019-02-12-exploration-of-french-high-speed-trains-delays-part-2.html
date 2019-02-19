@@ -146,7 +146,7 @@ tgv_arrival &lt;- tgv %&gt;%
   scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
                                              100,
                                              type = &quot;continuous&quot;))</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-3-1.png" width="960" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-3-1.png" width="768" /></p>
 <p>Wow, the effect of the month-long strike of 2018 is very, <em>very</em> clear. And there seem to be a lot of cancellation in 2016 too.</p>
 <p>According to the open data of the <a href="%22https://www.ouest-france.fr/economie/transports/sncf/infographies-sncf-depuis-1947-pas-une-annee-sans-mouvement-social-5621071%22">SNCF</a>, 2016 was one of the 10 biggest strike since 1947.</p>
 <p>The data for 2018 is not yet in the <a href="%22https://data.sncf.com/explore/dataset/mouvements-sociaux-depuis-1947/table/?sort=date&amp;dataChart=eyJ0aW1lc2NhbGUiOiIiLCJxdWVyaWVzIjpbeyJ4QXhpcyI6ImRhdGUiLCJzb3J0IjoiIiwibWF4cG9pbnRzIjoiIiwiY2hhcnRzIjpbeyJ5QXhpcyI6ImpvdXJuZWVzX3BlcmR1ZXMiLCJmdW5jIjoiU1VNIiwiY29sb3IiOiIjNjZjMmE1IiwidHlwZSI6InNwbGluZSIsInNjaWVudGlmaWNEaXNwbGF5Ijp0cnVlfV0sInRpbWVzY2FsZSI6InllYXIiLCJjb25maWciOnsiZGF0YXNldCI6Im1vdXZlbWVudHMtc29jaWF1eC1kZXB1aXMtMTk0NyIsIm9wdGlvbnMiOnsic29ydCI6ImRhdGUifX0sInNlcmllc0JyZWFrZG93biI6IiIsInNlcmllc0JyZWFrZG93blRpbWVzY2FsZSI6IiJ9XSwiZGlzcGxheUxlZ2VuZCI6dHJ1ZSwiYWxpZ25Nb250aCI6dHJ1ZX0%3D%22">SNCF open data about strikes</a> but 2018 will remain in the French memory<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a> as the 3 months long strike, the longest in the past 30 years. So it is not suprising that 2018 is a bad year in terms of train cancellation. Taking train was hell (M. Mousset, personnal observation).</p>
@@ -160,7 +160,7 @@ tgv_arrival &lt;- tgv %&gt;%
   geom_point(alpha = 0.4, size = 2, colour = &quot;#3B9AB2&quot;) +
   geom_smooth(colour = &quot;#EBCC2A&quot;) +
   facet_wrap(~year_ordered) +
-  labs(title = &quot;French High Speed Train cancellation rates and train duration&quot;,
+  labs(title = &quot;French High Speed Train cancellation rates \nand train duration&quot;,
        caption = &quot;Cancellation rate do not seem to increase much with trip lenght&quot;,
        subtitle = &quot;Data: data.sncf.com&quot;,
        x = &quot;Expected trip duration&quot;,
@@ -188,7 +188,7 @@ tgv_departure_all %&gt;%
   ggplot(aes(x = departure_station, y = cancellation_rate, fill = expected_trains)) +
   geom_col() +
   coord_flip() +
-  labs(title = &quot;All-time cancellation rates of High Speed Train per departure station&quot;,
+  labs(title = &quot;All-time cancellation rates of High Speed Train \nper departure station&quot;,
        subtitle = &quot;Data: data.sncf.com&quot;,
        y = &quot;Train cancellation rate (%)&quot;,
        x = &quot;Departure station&quot;,
@@ -197,7 +197,7 @@ tgv_departure_all %&gt;%
   scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
                                              100,
                                              type = &quot;continuous&quot;))</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-5-1.png" width="1152" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-5-1.png" width="768" /></p>
 <p>We can see two things. First, the stations with the greatest number of trains are pretty much in the middle of the other stations in terms of cancellation. So the cancellation do not result from just a huge service (and the likely technical problems associated with managing train and people at a bigger scale).</p>
 <p>We can also see that Madrid has a pretty bad reccord here, as well as Marnes la Vallee. However, we saw previously that we only have data in 2018 for these stations, and that 2018 was a weird year. Let’s see what happens if we focus on the years 2015-2017.</p>
 <pre class="r"><code>tgv_departure %&gt;% 
@@ -221,7 +221,7 @@ tgv_departure_all %&gt;%
              size = 1) +
   geom_col() +
   coord_flip() +
-  labs(title = &quot;All-time cancellation rates of High Speed Train per departure station,\nwithout 2018&quot;,
+  labs(title = &quot;All-time cancellation rates of High Speed Train \nper departure station,without 2018&quot;,
        subtitle = &quot;Data: data.sncf.com&quot;,
        y = &quot;Train cancellation rate (%)&quot;,
        x = &quot;Departure station&quot;,
@@ -230,7 +230,7 @@ tgv_departure_all %&gt;%
   scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
                                              100,
                                              type = &quot;continuous&quot;))</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-6-1.png" width="1152" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-6-1.png" width="768" /></p>
 <p>That stations that were supposed to host most departing trains do not seem to be associated with higher or lower cancellation rates.</p>
 <p>If I want to focus on the ones with more than 1% of cancelled trains, to shorten the graph:</p>
 <pre class="r"><code>tgv_departure %&gt;% 
@@ -255,7 +255,7 @@ tgv_departure_all %&gt;%
              size = 2) +
   geom_col() +
   coord_flip() +
-  labs(title = &quot;All-time cancellation rates of High Speed Train per departure station,\n2015 - 2018&quot;,
+  labs(title = &quot;All-time cancellation rates of High Speed\nTrain per departure station,\n2015 - 2018&quot;,
        subtitle = &quot;Data: data.sncf.com&quot;,
        y = &quot;Train cancellation rate (%)&quot;,
        x = &quot;Departure station&quot;,
@@ -296,7 +296,7 @@ tgv_departure_all %&gt;%
   coord_flip() +
   facet_wrap(~month_english) +
   scale_colour_manual(values = c(&quot;#3B9AB2&quot;, &quot;#F21A00&quot;)) +
-  labs(title = &quot;Train cancellation rates in 2017 and 2018 per station&quot;,
+  labs(title = &quot;Train cancellation rates in 2017 and 2018 \nper station&quot;,
        subtitle = &quot;2018 was a baaaaad year!&quot;,
        y = &quot;Monthly train cancellation rate (%)&quot;,
        x = &quot;Departure station&quot;,
@@ -310,7 +310,7 @@ tgv_departure_all %&gt;%
            color = &quot;Black&quot;)</code></pre>
 <pre><code>## geom_path: Each group consists of only one observation. Do you need to
 ## adjust the group aesthetic?</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-8-1.png" width="1440" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-8-1.png" width="960" /></p>
 <p>Yep, it was that bad.</p>
 </div>
 </div>
@@ -349,7 +349,7 @@ tgv_departure_all %&gt;%
   scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
                                              100,
                                              type = &quot;continuous&quot;))</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-9-1.png" width="960" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-9-1.png" width="768" /></p>
 <p>Marnes la Vallée is again our winner. As for cancellation rates, let’s have a look at what happened from 2015 to 2017.</p>
 <pre class="r"><code>tgv_departure %&gt;% 
   filter(year != 2018) %&gt;% 
@@ -384,7 +384,7 @@ tgv_departure_all %&gt;%
   scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
                                              100,
                                              type = &quot;continuous&quot;))</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-10-1.png" width="960" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-10-1.png" width="768" /></p>
 <p>So Toulon is fifth on the list of rate of delayed trains. It seems that the picture is a bit different for cancellation and delay. I supposed that this makes sense as I don’t think cancellation ad delay usually arrise because of the same problems.</p>
 <p>Now, per month</p>
 <pre class="r"><code>tgv_departure %&gt;% 
@@ -404,7 +404,7 @@ tgv_departure_all %&gt;%
                                              100,
                                              type = &quot;continuous&quot;)) +
   theme(axis.text.x = element_text(angle = 90))</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-11-1.png" width="1440" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-11-1.png" width="768" /></p>
 <p>Yes, in some stations, some months, 100% were late to some extent, I checked.</p>
 <p>Curiously, the strike in 2018 was associated with smaller delays in May and June: a lot of trains were cancelled, but the one actually runing were relatively more on time. Which makes sense: less traffic on the line, less people attempting to get the train, more trains to choose from (so perhaps lower rates of technical problems, ot at least plenty of replacment options to choose from) etc.</p>
 </div>
@@ -462,7 +462,7 @@ tgv_departure_all %&gt;%
            geom = &quot;text&quot;, 
            fontface = &quot;bold&quot;,
            colour = &quot;#F21A00&quot;)</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-12-1.png" width="1440" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
 <p>Now, which links have trains reducing their delay?</p>
 <pre class="r"><code>tgv %&gt;% 
   mutate(link = paste(departure_station, arrival_station, sep = &quot;-&quot;)) %&gt;% 
@@ -514,7 +514,7 @@ tgv_departure_all %&gt;%
            geom = &quot;text&quot;, 
            fontface = &quot;bold&quot;,
            colour = &quot;#F21A00&quot;)</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-13-1.png" width="1440" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-13-1.png" width="768" /></p>
 <p>So it seems that the station Marne la Vallée has high rates of delay (nothing we have not seen before), but the the pecentage of delayed trains at the other end of the links is much lower (at least for Lyon Part Dieu, and Marseille). Globally, it seems that trains manage to catch up delay between Lyon and Marnes. Which makes sense because if they don’t stop at Creusot, there is a long straight patch where they can gain and maintain speed.</p>
 </div>
 <div id="mean-delay" class="section level1">
@@ -539,7 +539,7 @@ tgv_departure_all %&gt;%
   scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
                                              100,
                                              type = &quot;continuous&quot;))</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-14-1.png" width="960" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-14-1.png" width="768" /></p>
 <p>I am surprised by how little patterns there is. The Italie Station seems to be driving the dataset. Let’s see if I remove it:</p>
 <pre class="r"><code>tgv %&gt;% 
   filter(departure_station != &quot;Italie&quot;) %&gt;% 
@@ -561,7 +561,7 @@ tgv_departure_all %&gt;%
   scale_fill_gradientn(colours = wes_palette(&quot;Zissou1&quot;, 
                                              100,
                                              type = &quot;continuous&quot;))</code></pre>
-<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-15-1.png" width="960" /></p>
+<p><img src="/post/2019-02-12-exploration-of-french-high-speed-trains-delays-part-2_files/figure-html/unnamed-chunk-15-1.png" width="768" /></p>
 <p>Well, this is still not highly informative I am afraid. Some stations have patches of rough time (maybe because of works within the station or on the rails close to the station), and there seem to be small differences between station, but nothing extaordinary catches my eye.</p>
 </div>
 <div class="footnotes">

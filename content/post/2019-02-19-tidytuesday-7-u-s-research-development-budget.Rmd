@@ -1,5 +1,5 @@
 ---
-title: '#TidyTuesday 7: U.S. Research & Development Budget'
+title: '#Tidytuesday 7: U.S. Research & Development Budget'
 author: Mathilde Mousset
 date: '2019-02-19'
 slug: tidytuesday-7-u-s-research-development-budget
@@ -9,6 +9,11 @@ tags:
   - R
   - TidyTuesday
   - twitter
+editor_options: 
+  chunk_output_type: console
+output:
+  blogdown::html_page:
+    toc: yes
 ---
 
 
@@ -29,12 +34,12 @@ First we import the data.
 read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv") %>% mutate(rd_budget_billion = rd_budget/(10^9)) -> feder_spendings
 ```
 
-We have a first look at the structure of the data. The data.frame is pretty straightforward:   
-- `department` the abbreviated name of the federal agencies  
-- `year`  
-- `rd_budget` the budget for research and development  
-- `total_outlays` the money actually paid out by the U.S. Treasury  
-- `GDP` the Gross Domestic Product, which represent the US economy  
+We have a first look at the structure of the data. The data.frame is pretty straightforward:    
+- `department` the abbreviated name of the federal agencies    
+- `year`    
+- `rd_budget` the budget for research and development    
+- `total_outlays` the money actually paid out by the U.S. Treasury   
+- `GDP` the Gross Domestic Product, which represent the US economy    
 - `discretionary_outlays` represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the [meaning]("https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/")  
 
 
@@ -70,7 +75,7 @@ feder_spendings %>%
 Because of the huge variation of funding between agencies, the heat map representation limits us in seeing the finer patterns. So let's go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free *y* scale.
 
 
-```{r lines_1, fig.height= 15, fig.width=12}
+```{r lines_1, fig.height= 10, fig.width=8}
 feder_spendings %>% 
   ggplot(aes( x = year, y = rd_budget_billion, 
               colour = department, 
@@ -100,7 +105,7 @@ We can see that the budget of defence has steadily risen, with a bump in after y
 Now, let's have a look at how much percent of the total federal budget is invested in these agencies. This informs us on the politic decisions on budget allocation between the different services.
 
 
-```{r lines_2, fig.height = 15, fig.width=12}
+```{r lines_2, fig.height = 12, fig.width=8}
 feder_spendings %>% 
   mutate(rd_rate = rd_budget / total_outlays) %>% 
   
@@ -136,7 +141,7 @@ Clearly, the decision has been to decrease investment in R&D over all agencies, 
 
 If we now investigate what the different budget represent compared to the GDP of the U.S.
 
-```{r lines_3, fig.height = 15, fig.width=12}
+```{r lines_3, fig.height = 14, fig.width=8}
 feder_spendings %>% 
   mutate(rd_rate = rd_budget / gdp) %>% 
   

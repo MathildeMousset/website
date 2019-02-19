@@ -1,5 +1,5 @@
 ---
-title: '#Tidituesday R challenge 2019'
+title: '#Tidytuesday R challenge 2019'
 author: Mathilde Mousset
 date: '2019-01-25'
 slug: tidituesday-r-challenge-2019

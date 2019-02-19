@@ -175,7 +175,7 @@ tgv_departure_year <- tgv_departure %>%
 ```
 
 
-```{r, fig.height=15, fig.width=10}
+```{r, fig.height=15, fig.width=8}
 tgv_departure_year %>% 
   mutate(departure_station = fct_reorder(departure_station, cancelation_rate)) %>% 
   ggplot(aes(x = departure_station, y = year_ordered)) +
@@ -205,14 +205,14 @@ The data for 2018 is not yet in the [SNCF open data about strikes]("https://data
 
 Let's see whether the cancellation rates change with trip length. Points represent the average trip length of a link, with the month rate of cancellation for this link.
 
-```{r, fig.height=10, fig.width=8}
+```{r, fig.height=8, fig.width=8}
 tgv %>%
   mutate(cancelation_rate = nb_cancelled_trains / expected_nb_trains) %>% 
   ggplot(aes(x = trip_duration, y = cancelation_rate)) +
   geom_point(alpha = 0.4, size = 2, colour = "#3B9AB2") +
   geom_smooth(colour = "#EBCC2A") +
   facet_wrap(~year_ordered) +
-  labs(title = "French High Speed Train cancellation rates and train duration",
+  labs(title = "French High Speed Train cancellation rates \nand train duration",
        caption = "Cancellation rate do not seem to increase much with trip lenght",
        subtitle = "Data: data.sncf.com",
        x = "Expected trip duration",
@@ -229,7 +229,7 @@ There is no obvious signal of here. train cancellation seem to to be as likely f
 Rather, I wonder if there is an all-time bad station?
 
 
-```{r, fig.height=20, fig.width=12}
+```{r, fig.height=10, fig.width=8}
 tgv_departure_all <- tgv_departure %>% 
   group_by(departure_station) %>% 
   summarise(expected_trains  = sum(expected_nb_trains, 
@@ -244,7 +244,7 @@ tgv_departure_all %>%
   ggplot(aes(x = departure_station, y = cancellation_rate, fill = expected_trains)) +
   geom_col() +
   coord_flip() +
-  labs(title = "All-time cancellation rates of High Speed Train per departure station",
+  labs(title = "All-time cancellation rates of High Speed Train \nper departure station",
        subtitle = "Data: data.sncf.com",
        y = "Train cancellation rate (%)",
        x = "Departure station",
@@ -260,7 +260,7 @@ We can see two things. First, the stations with the greatest number of trains ar
 We can also see that Madrid has a pretty bad reccord here, as well as Marnes la Vallee. However, we saw previously that we only have data in 2018 for these stations, and that 2018 was a weird year. Let's see what happens if we focus on the years 2015-2017.
 
 
-```{r, fig.height=20, fig.width=12}
+```{r, fig.height=10, fig.width=8}
 tgv_departure %>% 
   filter(year != 2018) %>% 
   group_by(departure_station) %>% 
@@ -282,7 +282,7 @@ tgv_departure %>%
              size = 1) +
   geom_col() +
   coord_flip() +
-  labs(title = "All-time cancellation rates of High Speed Train per departure station,\nwithout 2018",
+  labs(title = "All-time cancellation rates of High Speed Train \nper departure station,without 2018",
        subtitle = "Data: data.sncf.com",
        y = "Train cancellation rate (%)",
        x = "Departure station",
@@ -321,7 +321,7 @@ tgv_departure %>%
              size = 2) +
   geom_col() +
   coord_flip() +
-  labs(title = "All-time cancellation rates of High Speed Train per departure station,\n2015 - 2018",
+  labs(title = "All-time cancellation rates of High Speed\nTrain per departure station,\n2015 - 2018",
        subtitle = "Data: data.sncf.com",
        y = "Train cancellation rate (%)",
        x = "Departure station",
@@ -340,7 +340,7 @@ The first two stations are Nice and Toulon, in the PACA region (South-Est of Fra
 Ok, since the 2018 strike is still vivid in my memory, let's graphically address the difference between cancellation rates in 2017 and 2018 to remember how bad it was.
 
 
-```{r, fig.height=25, fig.width=15}
+```{r, fig.height=27, fig.width=10}
 tgv_departure %>% 
   filter(year %in% c(2017, 2018)) %>% 
   group_by(departure_station, year_ordered, month_english) %>% 
@@ -367,7 +367,7 @@ tgv_departure %>%
   coord_flip() +
   facet_wrap(~month_english) +
   scale_colour_manual(values = c("#3B9AB2", "#F21A00")) +
-  labs(title = "Train cancellation rates in 2017 and 2018 per station",
+  labs(title = "Train cancellation rates in 2017 and 2018 \nper station",
        subtitle = "2018 was a baaaaad year!",
        y = "Monthly train cancellation rate (%)",
        x = "Departure station",
@@ -388,7 +388,7 @@ Yep, it was that bad.
 
 Let's look at the number of delayed trains at departure station. First, all time rates of delayed trains (and I filter out stations where less than 10% of the trains were delayed).
 
-```{r, fig.height=10, fig.width=10}
+```{r, fig.height=10, fig.width=8}
 tgv_departure %>% 
   group_by(departure_station) %>% 
   summarise(delayed = sum(nb_delayed_trains_departure, na.rm = TRUE),
@@ -425,7 +425,7 @@ tgv_departure %>%
 
 Marnes la Vallée is again our winner. As for cancellation rates, let's have a look at what happened from 2015 to 2017.
 
-```{r, fig.height=10, fig.width=10}
+```{r, fig.height=8, fig.width=8}
 tgv_departure %>% 
   filter(year != 2018) %>% 
   group_by(departure_station) %>% 
@@ -465,7 +465,7 @@ So Toulon is fifth on the list of rate of delayed trains. It seems that the pict
 
 Now, per month
 
-```{r, fig.height=18, fig.width=15}
+```{r, fig.height=18, fig.width=8}
 tgv_departure %>% 
   mutate(delay_rate = 100 * nb_delayed_trains_departure / nb_trains) %>% 
   
@@ -496,7 +496,7 @@ Do trains acumulate more delay when they drive?
 Because we have many links, let's look at links where the percentage of delayed train is higher at arrival (so the train accumulates delay on average).
 
 
-```{r, fig.height=15, fig.width=15}
+```{r, fig.height=15, fig.width=8}
 tgv %>% 
   mutate(link = paste(departure_station, arrival_station, sep = "-")) %>% 
   group_by(link) %>% 
@@ -552,7 +552,7 @@ tgv %>%
 Now, which links have trains reducing their delay?
 
 
-```{r, fig.height=15, fig.width=15}
+```{r, fig.height=15, fig.width=8}
 tgv %>% 
   mutate(link = paste(departure_station, arrival_station, sep = "-")) %>% 
   group_by(link) %>% 
@@ -616,7 +616,7 @@ Before, we only looked the percentage of late trains at departure, and/or arriva
 
 Let's first look at the average delay of late trains at departure:
 
-```{r, fig.height=15, fig.width=10}
+```{r, fig.height=15, fig.width=8}
 tgv %>% 
   mutate(link = paste(departure_station, arrival_station, sep = "-")) %>% 
          
@@ -639,7 +639,7 @@ tgv %>%
 
 I am surprised by how little patterns there is. The Italie Station seems to be driving the dataset. Let's see if I remove it:
 
-```{r, fig.height=15, fig.width=10}
+```{r, fig.height=15, fig.width=8}
 tgv %>% 
   filter(departure_station != "Italie") %>% 
   filter(departure_station != "Francfort") %>% 

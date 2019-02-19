@@ -1,5 +1,5 @@
 ---
-title: '#TidyTuesday 7: U.S. Research & Development Budget'
+title: '#Tidytuesday 7: U.S. Research & Development Budget'
 author: Mathilde Mousset
 date: '2019-02-19'
 slug: tidytuesday-7-u-s-research-development-budget
@@ -9,9 +9,23 @@ tags:
   - R
   - TidyTuesday
   - twitter
+editor_options: 
+  chunk_output_type: console
+output:
+  blogdown::html_page:
+    toc: yes
 ---
 
 
+<div id="TOC">
+<ul>
+<li><a href="#total-rd-budget">Total R&amp;D budget</a></li>
+<li><a href="#rd-budget-relative-to-total-federal-budget">R&amp;D budget relative to total federal budget</a></li>
+<li><a href="#rd-budget-relative-to-gdp">R&amp;D budget relative to GDP</a></li>
+<li><a href="#cumulative-rd-budget-over-years">Cumulative R&amp;D budget over years</a></li>
+<li><a href="#a-litte-focus-on-the-national-science-fundation">A litte focus on the National Science Fundation</a></li>
+</ul>
+</div>
 
 <p>First we import the data.</p>
 <pre class="r"><code>read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv&quot;) %&gt;% mutate(rd_budget_billion = rd_budget/(10^9)) -&gt; feder_spendings</code></pre>
@@ -72,7 +86,7 @@ tags:
   theme(legend.position = &quot;none&quot;,
         panel.grid.major = element_blank(),
         strip.text = element_text(face = &quot;bold&quot;))</code></pre>
-<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_1-1.png" width="1152" /></p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_1-1.png" width="768" /></p>
 <p>We can see that the budget of defence has steadily risen, with a bump in after year 2000. <strong>NASA</strong> budget was brutally reduced during the mid-eighties, but recovered and has been mostly stable since.The <strong>NIH</strong> and <strong>NSF</strong> budget have slowly increased over years, although <strong>NIH</strong> is now stagnating.</p>
 </div>
 <div id="rd-budget-relative-to-total-federal-budget" class="section level2">
@@ -104,7 +118,7 @@ tags:
   theme(legend.position = &quot;none&quot;,
         panel.grid.major = element_blank(),
         strip.text = element_text(face = &quot;bold&quot;))</code></pre>
-<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_2-1.png" width="1152" /></p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_2-1.png" width="768" /></p>
 <p>Clearly, the decision has been to decrease investment in R&amp;D over all agencies, and thus all thematics.</p>
 </div>
 <div id="rd-budget-relative-to-gdp" class="section level2">
@@ -134,7 +148,7 @@ tags:
   theme(legend.position = &quot;none&quot;,
         panel.grid.major = element_blank(),
         strip.text = element_text(face = &quot;bold&quot;))</code></pre>
-<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_3-1.png" width="1152" /></p>
+<p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_3-1.png" width="768" /></p>
 <p>In recent years, the budget invested in research and development, compared to the GDP has been decreasing for pretty much all agencies.</p>
 </div>
 <div id="cumulative-rd-budget-over-years" class="section level1">
