@@ -1,0 +1,261 @@
+---
+title: '#TidyTuesday 7: U.S. research & development budget'
+author: Mathilde Mousset
+date: '2019-02-19'
+slug: tidytuesday-7-u-s-research-development-budget
+categories: []
+tags:
+  - data visualisation
+  - R
+  - TidyTuesday
+  - twitter
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(hrbrthemes)
+
+library(scales) # To scale things + pretty percents axis
+#library(superheat) # for heatmaps
+```
+
+
+First we import the data.
+
+```{r import_data}
+read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv") %>% mutate(rd_budget_billion = rd_budget/(10^9)) -> feder_spendings
+```
+
+We have a first look at the structure of the data. The data.frame is pretty straightforward: 
+- `department` the abbreviated name of the federal agencies
+- `year`
+- `rd_budget` the budget for research and development
+- `total_outlays` the money actually paid out by the U.S. Treasury
+- `GDP` the Gross Domestic Product, which represent the US economy
+- `discretionary_outlays` represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the [meaning]("https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/")
+
+I also created a column with the R&D budget in billions, because the numbers are easier to grasp then.
+
+```{r}
+glimpse(feder_spendings)
+```
+
+
+## Total R&D budget
+
+Since we are dealing with data through time, and with 14 categories, two types of visualization jumped to my mind: a heat map and a line plot. Both of them are pretty easy to make with `ggplot2`.
+
+From the heat map, what is obvious is that some agencies receive far more budget than some others. **DOD** stands for the department of defence, and it seemed to be the singlets most funded agency. Anybody with even a varnish of history knowledge about the U.S. will expect that. **NASA** also have high founding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, **HHS** and **DOE** concern human health.
+
+```{r, heatmap_1}
+feder_spendings %>% 
+  ggplot(aes(x = department, y = year, 
+             fill = rd_budget_billion)) +
+  coord_flip() +
+  geom_tile() +
+  labs(title = "R&D budget per agency and year",
+       y = "Year",
+       x = "Federal agency",
+       fill = "Inlfation adjusted budget\n(billion $)",
+       subtitle = "Department (DOD), health (NIH, HHS) and energy (DOE) \nhave the highest founding...",
+       caption = "Source data: American Association for the Advancement of Science\nInflation adjusted dollars") +
+  scale_fill_viridis_c(option = "inferno") +
+  theme_ipsum_tw()
+```
+
+Because of the huge variation of funding between agencies, this representation limits us in seeing the finer patterns. So let's go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free *y* scale.
+
+
+```{r lines_1, fig.height= 15, fig.width=12}
+feder_spendings %>% 
+  ggplot(aes( x = year, y = rd_budget_billion, 
+              colour = department, 
+              fill   = department)) +
+  facet_wrap(~department, scales = "free_y", ncol = 3) +
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = "R&D budget per agency and year",
+       x = "Year",
+       y = "Inflation-adjusted budget (billion $)",
+       colour = "",
+       caption = "Source data: American Association for the Advancement of Science") +
+  scale_colour_viridis_d(option = "inferno") +
+  scale_fill_viridis_d(option = "inferno") +
+  theme_ipsum_tw() +
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(),
+        strip.text = element_text(face = "bold"))
+```
+
+We can see that the budget of defence has steadily risen, with a bump in after year 2000. **NASA** budget was brutally reduced during the mid-eighties, but recovered and has been mostly stable since.The **NIH** and **NSF** budget have slowly increased over years, also **NIH** is now stagnating.
+
+## R&D budget relative to total federal budget
+
+Now, let's have a look at how much percent of the total federal budget is invested in these agencies. This informs us on the politic decisions on budget allocation between the different services.
+
+
+```{r lines_2, fig.height = 15, fig.width=12}
+feder_spendings %>% 
+  mutate(rd_rate = rd_budget / total_outlays) %>% 
+  
+  ggplot(aes(x = year, y = rd_rate, 
+             colour = department, 
+             fill   = department)) +
+  facet_wrap(~department, scales = "free_y", ncol = 3) +
+  
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = "Percentage of total federal budget invested in R&D in the USA",
+       y = "Year",
+       subtitle = "...but massive decrease of R&D founding over years (relative to total budget)",
+       x = "Percentage of US budget",
+       caption = "Source data: American Association for the Advancement of Science") +
+  
+  scale_colour_viridis_d(option = "inferno") +
+  scale_fill_viridis_d(option = "inferno") +
+  scale_y_continuous(labels = scales::percent) +
+  
+  theme_ipsum_tw() +
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(),
+        strip.text = element_text(face = "bold"))
+```
+
+
+
+## R&D budget relative to GDP
+
+If we now investigate what the different budget represent compared to the GDP of the U.S.
+
+```{r lines_3, fig.height = 15, fig.width=12}
+feder_spendings %>% 
+  mutate(rd_rate = rd_budget / gdp) %>% 
+  
+  ggplot(aes( x = year, y = rd_rate, 
+              colour = department, 
+              fill   = department)) +
+  facet_wrap(~department, scales = "free_y", ncol = 3) +
+  
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = "Percentage of GDP invested in R&D in the USA",
+       x = "Year",
+       subtitle = "Massive decrease of R&D founding over years (relative to GDP)",
+       y = "R&D budget as percents of GPD",
+       colour = "",
+       caption = "Source data: American Association for the Advancement of Science") +
+  scale_colour_viridis_d(option = "inferno") +
+  scale_fill_viridis_d(option = "inferno") +
+  theme_ipsum_tw() +
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(),
+        strip.text = element_text(face = "bold"))
+```
+
+In recent year, the budget invested in research and development, compared to the GDP has been decreasing for pretty much all agencies.
+
+# Cumulative R&D budget over years
+
+If we add the total amount of money invested in R&D fr each agencies over the forty years:
+
+```{r make_df}
+feder_spendings %>% 
+  group_by(department) %>% 
+  summarise(total_founded = sum(rd_budget, na.rm = TRUE),
+            total_budget  = sum(total_outlays, na.rm = TRUE)) %>% 
+  mutate(total_founded_billions = total_founded / (10^9),
+         rd_rate = total_founded/total_budget,
+         department = fct_reorder(department, rd_rate)) -> feder_total
+```
+
+Here again, we can see that the U.S. invested a *huge* amount of money in R&D for defence (over 2500 billion $) over the years. I cannot even understand what that sum of money means.
+They invested a bit less than 2000 billion $ in health.
+
+```{r col_1}
+ggplot(data = feder_total,
+       aes(x = department, y = total_founded_billions)) +
+  coord_flip() +
+  geom_col() +
+  geom_col(data = filter(feder_total, 
+                         department == "DOD"),
+           fill =  "#56106EFF") +
+  geom_col(data = filter(feder_total, 
+                         department == "NIH" | department == "HHS"),
+           fill = "#BB3754FF") +
+  geom_col(data = filter(feder_total, 
+                         department == "NSF"),
+           fill = "#F98C0AFF") +
+  
+  labs(title = "Total R&D budget per agency, 1976-2018",
+       y = "R&D budget (billion $)",
+       x = "Federal agency",
+       subtitle = "Total invesments in the past 40 years have been huge in defence, and moderate in health",
+       caption = "Source data: American Association for the Advancement of Science\nInflation adjusted dollars") +
+  theme_ipsum_tw()
+```
+
+
+# A litte focus on the National Science Fundation
+
+As a biologist, the **NSF** would be the main funding agency if I were working in the U.S., so let's single it out.
+
+
+```{r nsf_1}
+feder_spendings %>% 
+  filter(department == "NSF") %>% 
+  ggplot(aes(x = year, y = rd_budget_billion,
+             colour = department,
+             fill = department)) +
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = "National Science Fundation budget 1976-2017",
+       subtitle = "The total budget of the NSF increases with time...",
+       x = "",
+       y = "Inflation-adjusted budget (billion $)",
+       colour = "",
+       caption = "Source data: American Association for the Advancement of Science") +
+  scale_colour_viridis_d(option = "inferno") +
+  scale_fill_viridis_d(option = "inferno") +
+  theme_ipsum_tw() +
+  theme(legend.position = "none",
+        panel.grid.major = element_blank())
+```
+
+
+
+```{r nsf_2}
+feder_spendings %>% 
+  filter(department == "NSF") %>% 
+  mutate(rd_rate = rd_budget / gdp) %>% 
+  ggplot(aes(x = year, y = rd_rate,
+             colour = department,
+             fill = department)) +
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = "NSF fundings relative to GPD, 1976-2017",
+       subtitle = "... but fundings relative to GPD crash",
+       x = "Year",
+       y = "NSF budget as percents of GPD",
+       colour = "",
+       caption = "Source data: American Association for the Advancement of Science") +
+  scale_colour_viridis_d(option = "inferno") +
+  scale_fill_viridis_d(option = "inferno") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_ipsum_tw() +
+  theme(legend.position = "none",
+        panel.grid.major = element_blank())
+```
+

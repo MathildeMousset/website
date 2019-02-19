@@ -9,6 +9,9 @@ tags:
   - R
 editor_options: 
   chunk_output_type: console
+output:
+  blogdown::html_page:
+    toc: yes
 ---
 
 

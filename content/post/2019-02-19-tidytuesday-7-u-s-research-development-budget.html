@@ -1,0 +1,213 @@
+---
+title: '#TidyTuesday 7: U.S. research & development budget'
+author: Mathilde Mousset
+date: '2019-02-19'
+slug: tidytuesday-7-u-s-research-development-budget
+categories: []
+tags:
+  - data visualisation
+  - R
+  - TidyTuesday
+  - twitter
+---
+
+
+
+<p>First we import the data.</p>
+<pre class="r"><code>read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv&quot;) %&gt;% mutate(rd_budget_billion = rd_budget/(10^9)) -&gt; feder_spendings</code></pre>
+<p>We have a first look at the structure of the data. The data.frame is pretty straightforward: - <code>department</code> the abbreviated name of the federal agencies - <code>year</code> - <code>rd_budget</code> the budget for research and development - <code>total_outlays</code> the money actually paid out by the U.S. Treasury - <code>GDP</code> the Gross Domestic Product, which represent the US economy - <code>discretionary_outlays</code> represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the <a href="%22https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/%22">meaning</a></p>
+<p>I also created a column with the R&amp;D budget in billions, because the numbers are easier to grasp then.</p>
+<pre class="r"><code>glimpse(feder_spendings)</code></pre>
+<pre><code>## Observations: 588
+## Variables: 7
+## $ department            &lt;fct&gt; DOD, NASA, DOE, HHS, NIH, NSF, USDA, Int...
+## $ year                  &lt;int&gt; 1976, 1976, 1976, 1976, 1976, 1976, 1976...
+## $ rd_budget             &lt;dbl&gt; 3.5696e+10, 1.2513e+10, 1.0882e+10, 9.22...
+## $ total_outlays         &lt;dbl&gt; 3.718e+11, 3.718e+11, 3.718e+11, 3.718e+...
+## $ discretionary_outlays &lt;dbl&gt; 1.756e+11, 1.756e+11, 1.756e+11, 1.756e+...
+## $ gdp                   &lt;dbl&gt; 1.790e+12, 1.790e+12, 1.790e+12, 1.790e+...
+## $ rd_budget_billion     &lt;dbl&gt; 35.696, 12.513, 10.882, 9.226, 8.025, 2....</code></pre>
+<div id="total-rd-budget" class="section level2">
+<h2>Total R&amp;D budget</h2>
+<p>Since we are dealing with data through time, and with 14 categories, two types of visualization jumped to my mind: a heat map and a line plot. Both of them are pretty easy to make with <code>ggplot2</code>.</p>
+<p>From the heat map, what is obvious is that some agencies receive far more budget than some others. <strong>DOD</strong> stands for the department of defence, and it seemed to be the singlets most funded agency. Anybody with even a varnish of history knowledge about the U.S. will expect that. <strong>NASA</strong> also have high founding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, <strong>HHS</strong> and <strong>DOE</strong> concern human health.</p>
+<pre class="r"><code>feder_spendings %&gt;% 
+  ggplot(aes(x = department, y = year, 
+             fill = rd_budget_billion)) +
+  coord_flip() +
+  geom_tile() +
+  labs(title = &quot;R&amp;D budget per agency and year&quot;,
+       y = &quot;Year&quot;,
+       x = &quot;Federal agency&quot;,
+       fill = &quot;Inlfation adjusted budget\n(billion $)&quot;,
+       subtitle = &quot;Department (DOD), health (NIH, HHS) and energy (DOE) \nhave the highest founding...&quot;,
+       caption = &quot;Source data: American Association for the Advancement of Science\nInflation adjusted dollars&quot;) +
+  scale_fill_viridis_c(option = &quot;inferno&quot;) +
+  theme_ipsum_tw()</code></pre>
+<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/heatmap_1-1.png" width="672" /></p>
+<p>Because of the huge variation of funding between agencies, this representation limits us in seeing the finer patterns. So let’s go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free <em>y</em> scale.</p>
+<pre class="r"><code>feder_spendings %&gt;% 
+  ggplot(aes( x = year, y = rd_budget_billion, 
+              colour = department, 
+              fill   = department)) +
+  facet_wrap(~department, scales = &quot;free_y&quot;, ncol = 3) +
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = &quot;R&amp;D budget per agency and year&quot;,
+       x = &quot;Year&quot;,
+       y = &quot;Inflation-adjusted budget (billion $)&quot;,
+       colour = &quot;&quot;,
+       caption = &quot;Source data: American Association for the Advancement of Science&quot;) +
+  scale_colour_viridis_d(option = &quot;inferno&quot;) +
+  scale_fill_viridis_d(option = &quot;inferno&quot;) +
+  theme_ipsum_tw() +
+  theme(legend.position = &quot;none&quot;,
+        panel.grid.major = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;))</code></pre>
+<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_1-1.png" width="1152" /></p>
+<p>We can see that the budget of defence has steadily risen, with a bump in after year 2000. <strong>NASA</strong> budget was brutally reduced during the mid-eighties, but recovered and has been mostly stable since.The <strong>NIH</strong> and <strong>NSF</strong> budget have slowly increased over years, also <strong>NIH</strong> is now stagnating.</p>
+</div>
+<div id="rd-budget-relative-to-total-federal-budget" class="section level2">
+<h2>R&amp;D budget relative to total federal budget</h2>
+<p>Now, let’s have a look at how much percent of the total federal budget is invested in these agencies. This informs us on the politic decisions on budget allocation between the different services.</p>
+<pre class="r"><code>feder_spendings %&gt;% 
+  mutate(rd_rate = rd_budget / total_outlays) %&gt;% 
+  
+  ggplot(aes(x = year, y = rd_rate, 
+             colour = department, 
+             fill   = department)) +
+  facet_wrap(~department, scales = &quot;free_y&quot;, ncol = 3) +
+  
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = &quot;Percentage of total federal budget invested in R&amp;D in the USA&quot;,
+       y = &quot;Year&quot;,
+       subtitle = &quot;...but massive decrease of R&amp;D founding over years (relative to total budget)&quot;,
+       x = &quot;Percentage of US budget&quot;,
+       caption = &quot;Source data: American Association for the Advancement of Science&quot;) +
+  
+  scale_colour_viridis_d(option = &quot;inferno&quot;) +
+  scale_fill_viridis_d(option = &quot;inferno&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  
+  theme_ipsum_tw() +
+  theme(legend.position = &quot;none&quot;,
+        panel.grid.major = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;))</code></pre>
+<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_2-1.png" width="1152" /></p>
+</div>
+<div id="rd-budget-relative-to-gdp" class="section level2">
+<h2>R&amp;D budget relative to GDP</h2>
+<p>If we now investigate what the different budget represent compared to the GDP of the U.S.</p>
+<pre class="r"><code>feder_spendings %&gt;% 
+  mutate(rd_rate = rd_budget / gdp) %&gt;% 
+  
+  ggplot(aes( x = year, y = rd_rate, 
+              colour = department, 
+              fill   = department)) +
+  facet_wrap(~department, scales = &quot;free_y&quot;, ncol = 3) +
+  
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = &quot;Percentage of GDP invested in R&amp;D in the USA&quot;,
+       x = &quot;Year&quot;,
+       subtitle = &quot;Massive decrease of R&amp;D founding over years (relative to GDP)&quot;,
+       y = &quot;R&amp;D budget as percents of GPD&quot;,
+       colour = &quot;&quot;,
+       caption = &quot;Source data: American Association for the Advancement of Science&quot;) +
+  scale_colour_viridis_d(option = &quot;inferno&quot;) +
+  scale_fill_viridis_d(option = &quot;inferno&quot;) +
+  theme_ipsum_tw() +
+  theme(legend.position = &quot;none&quot;,
+        panel.grid.major = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;))</code></pre>
+<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/lines_3-1.png" width="1152" /></p>
+<p>In recent year, the budget invested in research and development, compared to the GDP has been decreasing for pretty much all agencies.</p>
+</div>
+<div id="cumulative-rd-budget-over-years" class="section level1">
+<h1>Cumulative R&amp;D budget over years</h1>
+<p>If we add the total amount of money invested in R&amp;D fr each agencies over the forty years:</p>
+<pre class="r"><code>feder_spendings %&gt;% 
+  group_by(department) %&gt;% 
+  summarise(total_founded = sum(rd_budget, na.rm = TRUE),
+            total_budget  = sum(total_outlays, na.rm = TRUE)) %&gt;% 
+  mutate(total_founded_billions = total_founded / (10^9),
+         rd_rate = total_founded/total_budget,
+         department = fct_reorder(department, rd_rate)) -&gt; feder_total</code></pre>
+<p>Here again, we can see that the U.S. invested a <em>huge</em> amount of money in R&amp;D for defence (over 2500 billion $) over the years. I cannot even understand what that sum of money means. They invested a bit less than 2000 billion $ in health.</p>
+<pre class="r"><code>ggplot(data = feder_total,
+       aes(x = department, y = total_founded_billions)) +
+  coord_flip() +
+  geom_col() +
+  geom_col(data = filter(feder_total, 
+                         department == &quot;DOD&quot;),
+           fill =  &quot;#56106EFF&quot;) +
+  geom_col(data = filter(feder_total, 
+                         department == &quot;NIH&quot; | department == &quot;HHS&quot;),
+           fill = &quot;#BB3754FF&quot;) +
+  geom_col(data = filter(feder_total, 
+                         department == &quot;NSF&quot;),
+           fill = &quot;#F98C0AFF&quot;) +
+  
+  labs(title = &quot;Total R&amp;D budget per agency, 1976-2018&quot;,
+       y = &quot;R&amp;D budget (billion $)&quot;,
+       x = &quot;Federal agency&quot;,
+       subtitle = &quot;Total invesments in the past 40 years have been huge in defence, and moderate in health&quot;,
+       caption = &quot;Source data: American Association for the Advancement of Science\nInflation adjusted dollars&quot;) +
+  theme_ipsum_tw()</code></pre>
+<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/col_1-1.png" width="672" /></p>
+</div>
+<div id="a-litte-focus-on-the-national-science-fundation" class="section level1">
+<h1>A litte focus on the National Science Fundation</h1>
+<p>As a biologist, the <strong>NSF</strong> would be the main funding agency if I were working in the U.S., so let’s single it out.</p>
+<pre class="r"><code>feder_spendings %&gt;% 
+  filter(department == &quot;NSF&quot;) %&gt;% 
+  ggplot(aes(x = year, y = rd_budget_billion,
+             colour = department,
+             fill = department)) +
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = &quot;National Science Fundation budget 1976-2017&quot;,
+       subtitle = &quot;The total budget of the NSF increases with time...&quot;,
+       x = &quot;&quot;,
+       y = &quot;Inflation-adjusted budget (billion $)&quot;,
+       colour = &quot;&quot;,
+       caption = &quot;Source data: American Association for the Advancement of Science&quot;) +
+  scale_colour_viridis_d(option = &quot;inferno&quot;) +
+  scale_fill_viridis_d(option = &quot;inferno&quot;) +
+  theme_ipsum_tw() +
+  theme(legend.position = &quot;none&quot;,
+        panel.grid.major = element_blank())</code></pre>
+<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/nsf_1-1.png" width="672" /></p>
+<pre class="r"><code>feder_spendings %&gt;% 
+  filter(department == &quot;NSF&quot;) %&gt;% 
+  mutate(rd_rate = rd_budget / gdp) %&gt;% 
+  ggplot(aes(x = year, y = rd_rate,
+             colour = department,
+             fill = department)) +
+  geom_line(size = 1) +
+  geom_area(alpha = 0.5) +
+  geom_point(size = 2) +
+  
+  labs(title = &quot;NSF fundings relative to GPD, 1976-2017&quot;,
+       subtitle = &quot;... but fundings relative to GPD crash&quot;,
+       x = &quot;Year&quot;,
+       y = &quot;NSF budget as percents of GPD&quot;,
+       colour = &quot;&quot;,
+       caption = &quot;Source data: American Association for the Advancement of Science&quot;) +
+  scale_colour_viridis_d(option = &quot;inferno&quot;) +
+  scale_fill_viridis_d(option = &quot;inferno&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  theme_ipsum_tw() +
+  theme(legend.position = &quot;none&quot;,
+        panel.grid.major = element_blank())</code></pre>
+<p><img src="/content/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/nsf_2-1.png" width="672" /></p>
+</div>

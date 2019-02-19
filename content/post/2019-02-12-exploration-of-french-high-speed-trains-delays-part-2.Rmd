@@ -8,12 +8,12 @@ tags:
   - SNCF
   - TidyTuesday
 slug: exploration-of-french-high-speed-trains-delays-part-2
+editor_options: 
+  chunk_output_type: console
 output:
   blogdown::html_page:
     toc: yes
 ---
-
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -48,6 +48,7 @@ Originally, for this post, I wanted to map the data on a French map, but I encou
 
 
 # The data
+
 
 The dataset were downloaded on the 1st of February 2019 on the [Open Data of the French train company](https://ressources.data.sncf.com/explore/dataset/regularite-mensuelle-tgv-aqst/export/?sort=nombre_de_trains_annules&q=gare&dataChart=eyJxdWVyaWVzIjpbeyJjaGFydHMiOlt7InR5cGUiOiJzcGxpbmUiLCJmdW5jIjoiQVZHIiwieUF4aXMiOiJleHRlcm5lcyIsInNjaWVudGlmaWNEaXNwbGF5Ijp0cnVlLCJjb2xvciI6IiNhNmQ4NTQifV0sInhBeGlzIjoicGVyaW9kZSIsIm1heHBvaW50cyI6IiIsInRpbWVzY2FsZSI6Im1vbnRoIiwic29ydCI6IiIsImNvbmZpZyI6eyJkYXRhc2V0IjoicmVndWxhcml0ZS1tZW5zdWVsbGUtdGd2LWFxc3QiLCJvcHRpb25zIjp7InNvcnQiOiJub21icmVfZGVfdHJhaW5zX2FubnVsZXMifX19XSwidGltZXNjYWxlIjoiIiwiZGlzcGxheUxlZ2VuZCI6dHJ1ZSwiYWxpZ25Nb250aCI6dHJ1ZX0%3D).
 
