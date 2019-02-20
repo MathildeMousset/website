@@ -18,11 +18,11 @@ output:
 
 This week [Tidytuesday's data](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12) concern US research and development budget. Three files were provided, with budget data for Research & Development, climate and energy.
 
-I will focus on the R&D budget. I wish to know which agencies get the highest funding, and how research fundings evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that's true.
+I will focus on the R&D budget. I wish to know which agencies get the highest funding, and how research funding evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that's true.
 
 Today's exploration will be quite simple, and I will use mostly `dplyr` to summarise data per agencies, and `ggplot2` to plot things. A little trick, though is the package `scales` that is used to write percentage signs on the plot axis.
 
-And I use the `hrbrthemes` for the beautifull themes. One day I will make my own professional-looking theme. One day...
+And I use the `hrbrthemes` for the beautiful themes. One day I will make my own professional-looking theme. One day...
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -60,7 +60,7 @@ glimpse(feder_spendings)
 
 Since we are dealing with data through time, and with 14 categories, two types of visualization jumped directly to my mind: a heat map and a line plot. Both of them are pretty easy to make with `ggplot2`.
 
-From the heat map, what is obvious is that some agencies receive far more money than some others. **DOD** stands for the department of defence, and it seemed to be the singlets most funded agency, which anybody with even a varnish of history knowledge about the U.S. would expect. **NASA** also have high founding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, **HHS** and **DOE** perform health research.
+From the heat map, what is obvious is that some agencies receive far more money than some others. **DOD** stands for the department of defence, and it seemed to be the singlets most funded agency, which anybody with even a varnish of history knowledge about the U.S. would expect. **NASA** also have high funding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, **HHS** and **DOE** perform health research.
 
 ```{r, heatmap_1}
 feder_spendings %>% 
@@ -72,13 +72,14 @@ feder_spendings %>%
        y = "Year",
        x = "Federal agency",
        fill = "Inlfation adjusted budget\n(billion $)",
-       subtitle = "Department (DOD), health (NIH, HHS) and energy (DOE) \nhave the highest founding...",
+       subtitle = "Department (DOD), health (NIH, HHS) and energy (DOE) \nhave the highest funding...",
        caption = "Source data: American Association for the Advancement of Science\nInflation adjusted dollars") +
   scale_fill_viridis_c(option = "inferno") +
   theme_ipsum_tw()
 ```
 
-Because of the huge variation of funding between agencies, the heat map representation limits us in seeing the finer patterns. So let's go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free *y* scale.
+
+Because of the huge variation of funding between agencies, the heat map representation limits us in seeing the finer patterns. So let's go back to good old line graphs. Since we already know which agencies are the most funded, I make a plot by agency, with free scale on the *y* axis.
 
 
 ```{r lines_1, fig.height= 10, fig.width=8}
@@ -127,7 +128,7 @@ feder_spendings %>%
   
   labs(title = "Percentage of total federal budget invested in R&D in the USA",
        y = "Year",
-       subtitle = "...but massive decrease of R&D founding over years (relative to total budget)",
+       subtitle = "...but massive decrease of R&D funding over years (relative to total budget)",
        x = "Percentage of US budget",
        caption = "Source data: American Association for the Advancement of Science") +
   
@@ -164,7 +165,7 @@ feder_spendings %>%
   
   labs(title = "Percentage of GDP invested in R&D in the USA",
        x = "Year",
-       subtitle = "Massive decrease of R&D founding over years (relative to GDP)",
+       subtitle = "Massive decrease of R&D funding over years (relative to GDP)",
        y = "R&D budget as percents of GPD",
        colour = "",
        caption = "Source data: American Association for the Advancement of Science") +

@@ -28,9 +28,9 @@ output:
 </div>
 
 <p>This week <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12">Tidytuesday’s data</a> concern US research and development budget. Three files were provided, with budget data for Research &amp; Development, climate and energy.</p>
-<p>I will focus on the R&amp;D budget. I wish to know which agencies get the highest funding, and how research fundings evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that’s true.</p>
+<p>I will focus on the R&amp;D budget. I wish to know which agencies get the highest funding, and how research funding evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that’s true.</p>
 <p>Today’s exploration will be quite simple, and I will use mostly <code>dplyr</code> to summarise data per agencies, and <code>ggplot2</code> to plot things. A little trick, though is the package <code>scales</code> that is used to write percentage signs on the plot axis.</p>
-<p>And I use the <code>hrbrthemes</code> for the beautifull themes. One day I will make my own professional-looking theme. One day…</p>
+<p>And I use the <code>hrbrthemes</code> for the beautiful themes. One day I will make my own professional-looking theme. One day…</p>
 <p>First we import the data directly from Github.</p>
 <pre class="r"><code>read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv&quot;) %&gt;% mutate(rd_budget_billion = rd_budget/(10^9)) -&gt; feder_spendings</code></pre>
 <p>We have a first look at the structure of the data. The data.frame is pretty straightforward:<br />
@@ -53,7 +53,7 @@ output:
 <div id="total-rd-budget" class="section level2">
 <h2>Total R&amp;D budget</h2>
 <p>Since we are dealing with data through time, and with 14 categories, two types of visualization jumped directly to my mind: a heat map and a line plot. Both of them are pretty easy to make with <code>ggplot2</code>.</p>
-<p>From the heat map, what is obvious is that some agencies receive far more money than some others. <strong>DOD</strong> stands for the department of defence, and it seemed to be the singlets most funded agency, which anybody with even a varnish of history knowledge about the U.S. would expect. <strong>NASA</strong> also have high founding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, <strong>HHS</strong> and <strong>DOE</strong> perform health research.</p>
+<p>From the heat map, what is obvious is that some agencies receive far more money than some others. <strong>DOD</strong> stands for the department of defence, and it seemed to be the singlets most funded agency, which anybody with even a varnish of history knowledge about the U.S. would expect. <strong>NASA</strong> also have high funding, which is not totally surprising, especially given the data on Space Launches that we explored for #Tidytuesday week 3. The two remaining agencies that stand out, <strong>HHS</strong> and <strong>DOE</strong> perform health research.</p>
 <pre class="r"><code>feder_spendings %&gt;% 
   ggplot(aes(x = department, y = year, 
              fill = rd_budget_billion)) +
@@ -63,12 +63,12 @@ output:
        y = &quot;Year&quot;,
        x = &quot;Federal agency&quot;,
        fill = &quot;Inlfation adjusted budget\n(billion $)&quot;,
-       subtitle = &quot;Department (DOD), health (NIH, HHS) and energy (DOE) \nhave the highest founding...&quot;,
+       subtitle = &quot;Department (DOD), health (NIH, HHS) and energy (DOE) \nhave the highest funding...&quot;,
        caption = &quot;Source data: American Association for the Advancement of Science\nInflation adjusted dollars&quot;) +
   scale_fill_viridis_c(option = &quot;inferno&quot;) +
   theme_ipsum_tw()</code></pre>
 <p><img src="/post/2019-02-19-tidytuesday-7-u-s-research-development-budget_files/figure-html/heatmap_1-1.png" width="672" /></p>
-<p>Because of the huge variation of funding between agencies, the heat map representation limits us in seeing the finer patterns. So let’s go back to good old line graphs. Since we already know which agencies are the most founded, I make a plot be agency, with free <em>y</em> scale.</p>
+<p>Because of the huge variation of funding between agencies, the heat map representation limits us in seeing the finer patterns. So let’s go back to good old line graphs. Since we already know which agencies are the most funded, I make a plot by agency, with free scale on the <em>y</em> axis.</p>
 <pre class="r"><code>feder_spendings %&gt;% 
   ggplot(aes( x = year, y = rd_budget_billion, 
               colour = department, 
@@ -110,7 +110,7 @@ output:
   
   labs(title = &quot;Percentage of total federal budget invested in R&amp;D in the USA&quot;,
        y = &quot;Year&quot;,
-       subtitle = &quot;...but massive decrease of R&amp;D founding over years (relative to total budget)&quot;,
+       subtitle = &quot;...but massive decrease of R&amp;D funding over years (relative to total budget)&quot;,
        x = &quot;Percentage of US budget&quot;,
        caption = &quot;Source data: American Association for the Advancement of Science&quot;) +
   
@@ -143,7 +143,7 @@ output:
   
   labs(title = &quot;Percentage of GDP invested in R&amp;D in the USA&quot;,
        x = &quot;Year&quot;,
-       subtitle = &quot;Massive decrease of R&amp;D founding over years (relative to GDP)&quot;,
+       subtitle = &quot;Massive decrease of R&amp;D funding over years (relative to GDP)&quot;,
        y = &quot;R&amp;D budget as percents of GPD&quot;,
        colour = &quot;&quot;,
        caption = &quot;Source data: American Association for the Advancement of Science&quot;) +
