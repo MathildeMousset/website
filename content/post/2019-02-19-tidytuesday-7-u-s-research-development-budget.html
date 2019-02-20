@@ -30,6 +30,7 @@ output:
 <p>This week <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12">Tidytuesday’s data</a> concern US research and development budget. Three files were provided, with budget data for Research &amp; Development, climate and energy.</p>
 <p>I will focus on the R&amp;D budget. I wish to know which agencies get the highest funding, and how research fundings evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that’s true.</p>
 <p>Today’s exploration will be quite simple, and I will use mostly <code>dplyr</code> to summarise data per agencies, and <code>ggplot2</code> to plot things. A little trick, though is the package <code>scales</code> that is used to write percentage signs on the plot axis.</p>
+<p>And I use the <code>hrbrthemes</code> for the beautifull themes. One day I will make my own professional-looking theme. One day…</p>
 <p>First we import the data directly from Github.</p>
 <pre class="r"><code>read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv&quot;) %&gt;% mutate(rd_budget_billion = rd_budget/(10^9)) -&gt; feder_spendings</code></pre>
 <p>We have a first look at the structure of the data. The data.frame is pretty straightforward:<br />
