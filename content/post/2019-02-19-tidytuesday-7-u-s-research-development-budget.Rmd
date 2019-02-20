@@ -16,11 +16,17 @@ output:
     toc: yes
 ---
 
+This week [Tidytuesday's data](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12) concern US research and development budget. Three files were provided, with budget data for Research & Development, climate and energy.
+
+I will focus on the R&D budget. I wish to know which agencies get the highest funding, and how research fundings evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that's true.
+
+Today's exploration will be quite simple, and I will use mostly `dplyr` to summarise data per agencies, and `ggplot2` to plot things. A little trick, though is the package `scales` that is used to write percentage signs on the plot axis.
+
+And I use the `hrbrthemes` for the beautifull themes. One day I will make my own professional-looking theme. One day...
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(readxl)
 library(hrbrthemes)
 
 library(scales) # To scale things + pretty percents axis
@@ -28,19 +34,19 @@ library(scales) # To scale things + pretty percents axis
 ```
 
 
-First we import the data.
+First we import the data directly from Github.
 
 ```{r import_data}
 read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv") %>% mutate(rd_budget_billion = rd_budget/(10^9)) -> feder_spendings
 ```
 
+
 We have a first look at the structure of the data. The data.frame is pretty straightforward:    
 - `department` the abbreviated name of the federal agencies    
 - `year`    
-- `rd_budget` the budget for research and development    
-- `total_outlays` the money actually paid out by the U.S. Treasury   
+- `rd_budget` the budget for research and development   - `total_outlays` the money actually paid out by the U.S. Treasury   
 - `GDP` the Gross Domestic Product, which represent the US economy    
-- `discretionary_outlays` represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the [meaning]("https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/")  
+- `discretionary_outlays` represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had check the [meaning]("https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/")...  
 
 
 I also created a column with the R&D budget in billions, because it makes numbers easier to grasp.
@@ -107,8 +113,9 @@ Now, let's have a look at how much percent of the total federal budget is invest
 
 ```{r lines_2, fig.height = 12, fig.width=8}
 feder_spendings %>% 
+  # Get proportion of budget
   mutate(rd_rate = rd_budget / total_outlays) %>% 
-  
+  # Plot
   ggplot(aes(x = year, y = rd_rate, 
              colour = department, 
              fill   = department)) +
@@ -142,7 +149,8 @@ Clearly, the decision has been to decrease investment in R&D over all agencies, 
 If we now investigate what the different budget represent compared to the GDP of the U.S.
 
 ```{r lines_3, fig.height = 14, fig.width=8}
-feder_spendings %>% 
+feder_spendings %>%
+  # Get proportion of budget
   mutate(rd_rate = rd_budget / gdp) %>% 
   
   ggplot(aes( x = year, y = rd_rate, 
@@ -175,6 +183,7 @@ In recent years, the budget invested in research and development, compared to th
 If we add the total amount of money invested in R&D fr each agencies over the forty years:
 
 ```{r make_df}
+# Sum the budget and R&D budget per agency over all years, and then take the proportion invested in R&D
 feder_spendings %>% 
   group_by(department) %>% 
   summarise(total_founded = sum(rd_budget, na.rm = TRUE),
@@ -219,6 +228,7 @@ As a biologist, the **NSF** would be the main funding agency if I were working i
 ```{r nsf_1}
 feder_spendings %>% 
   filter(department == "NSF") %>% 
+  
   ggplot(aes(x = year, y = rd_budget_billion,
              colour = department,
              fill = department)) +

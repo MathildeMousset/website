@@ -27,15 +27,17 @@ output:
 </ul>
 </div>
 
-<p>First we import the data.</p>
+<p>This week <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12">Tidytuesday’s data</a> concern US research and development budget. Three files were provided, with budget data for Research &amp; Development, climate and energy.</p>
+<p>I will focus on the R&amp;D budget. I wish to know which agencies get the highest funding, and how research fundings evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that’s true.</p>
+<p>Today’s exploration will be quite simple, and I will use mostly <code>dplyr</code> to summarise data per agencies, and <code>ggplot2</code> to plot things. A little trick, though is the package <code>scales</code> that is used to write percentage signs on the plot axis.</p>
+<p>First we import the data directly from Github.</p>
 <pre class="r"><code>read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv&quot;) %&gt;% mutate(rd_budget_billion = rd_budget/(10^9)) -&gt; feder_spendings</code></pre>
 <p>We have a first look at the structure of the data. The data.frame is pretty straightforward:<br />
 - <code>department</code> the abbreviated name of the federal agencies<br />
 - <code>year</code><br />
-- <code>rd_budget</code> the budget for research and development<br />
-- <code>total_outlays</code> the money actually paid out by the U.S. Treasury<br />
+- <code>rd_budget</code> the budget for research and development - <code>total_outlays</code> the money actually paid out by the U.S. Treasury<br />
 - <code>GDP</code> the Gross Domestic Product, which represent the US economy<br />
-- <code>discretionary_outlays</code> represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had to go and look for the <a href="%22https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/%22">meaning</a></p>
+- <code>discretionary_outlays</code> represent the part of the budget that pays for governmental programs. These spending levels are set each year by Congress. Yes, I had check the <a href="%22https://www.nationalpriorities.org/budget-basics/federal-budget-101/spending/%22">meaning</a>…</p>
 <p>I also created a column with the R&amp;D budget in billions, because it makes numbers easier to grasp.</p>
 <pre class="r"><code>glimpse(feder_spendings)</code></pre>
 <pre><code>## Observations: 588
@@ -93,8 +95,9 @@ output:
 <h2>R&amp;D budget relative to total federal budget</h2>
 <p>Now, let’s have a look at how much percent of the total federal budget is invested in these agencies. This informs us on the politic decisions on budget allocation between the different services.</p>
 <pre class="r"><code>feder_spendings %&gt;% 
+  # Get proportion of budget
   mutate(rd_rate = rd_budget / total_outlays) %&gt;% 
-  
+  # Plot
   ggplot(aes(x = year, y = rd_rate, 
              colour = department, 
              fill   = department)) +
@@ -124,7 +127,8 @@ output:
 <div id="rd-budget-relative-to-gdp" class="section level2">
 <h2>R&amp;D budget relative to GDP</h2>
 <p>If we now investigate what the different budget represent compared to the GDP of the U.S.</p>
-<pre class="r"><code>feder_spendings %&gt;% 
+<pre class="r"><code>feder_spendings %&gt;%
+  # Get proportion of budget
   mutate(rd_rate = rd_budget / gdp) %&gt;% 
   
   ggplot(aes( x = year, y = rd_rate, 
@@ -154,7 +158,8 @@ output:
 <div id="cumulative-rd-budget-over-years" class="section level1">
 <h1>Cumulative R&amp;D budget over years</h1>
 <p>If we add the total amount of money invested in R&amp;D fr each agencies over the forty years:</p>
-<pre class="r"><code>feder_spendings %&gt;% 
+<pre class="r"><code># Sum the budget and R&amp;D budget per agency over all years, and then take the proportion invested in R&amp;D
+feder_spendings %&gt;% 
   group_by(department) %&gt;% 
   summarise(total_founded = sum(rd_budget, na.rm = TRUE),
             total_budget  = sum(total_outlays, na.rm = TRUE)) %&gt;% 
@@ -189,6 +194,7 @@ output:
 <p>As a biologist, the <strong>NSF</strong> would be the main funding agency if I were working in the U.S., so let’s single it out.</p>
 <pre class="r"><code>feder_spendings %&gt;% 
   filter(department == &quot;NSF&quot;) %&gt;% 
+  
   ggplot(aes(x = year, y = rd_budget_billion,
              colour = department,
              fill = department)) +
