@@ -1,5 +1,5 @@
 ---
-title: '#Tidytuesday 7: U.S. Research & Development Budget'
+title: '#Tidytuesday 7: U.S. Research & Development Budget (part 1)'
 author: Mathilde Mousset
 date: '2019-02-19'
 slug: tidytuesday-7-u-s-research-development-budget
@@ -16,7 +16,7 @@ output:
     toc: yes
 ---
 
-This week [Tidytuesday's data](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12) concern US research and development budget. Three files were provided, with budget data for Research & Development, climate and energy.
+This week [Tidytuesday's data](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12) concern US research and development budget. Three files were provided, with budget data for Research & Development, climate and energy. This dataset was originally collected by the [American Association for the Advancement of Science]("https://www.aaas.org/").
 
 I will focus on the R&D budget. I wish to know which agencies get the highest funding, and how research funding evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that's true.
 
@@ -30,7 +30,7 @@ library(tidyverse)
 library(hrbrthemes)
 
 library(scales) # To scale things + pretty percents axis
-#library(superheat) # for heatmaps
+library(superheat) # for heatmaps
 ```
 
 
@@ -276,4 +276,5 @@ feder_spendings %>%
   theme(legend.position = "none",
         panel.grid.major = element_blank())
 ```
+
 

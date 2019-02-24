@@ -1,0 +1,498 @@
+---
+title: '#Tidytuesday 7: U.S. R&D Budget (part 2): hierarchical clustering'
+author: Mathilde Mousset
+date: '2019-02-22'
+slug: tidytuesday-7-u-s-research-development-budget-part-2
+categories: []
+tags:
+  - data visualisation
+  - data analysis
+  - R
+  - TidyTuesday
+  - hierarchical clustering
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+<p>I will use the #Tidytuesday data on <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12">U.S. R&amp;D funding</a> to perform a simple cluster analysis in R. Since I never performed such an analysis in R, I followed and somewhat modified the code written by <a href="%22https://otho.netlify.com/post/government-funding/%22">Otho Mantegazza</a>.</p>
+<p>For details on the data set, see the previous post.</p>
+<p>First we import the data directly from Github.</p>
+<pre class="r"><code>feder_spendings &lt;- read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv&quot;)</code></pre>
+<p>The dataset is relatively simple. Here we are interested in the funding spent by the U.S. government to each of the federal agencies for R&amp;D over the years.</p>
+<div id="correlation-in-funding-over-time" class="section level1">
+<h1>Correlation in funding over time</h1>
+<p>We saw in the previous post that the temporal evolution of funding varies between agencies over time. We would like to better understand which agencies share similar trends in funding over time.</p>
+<p>First easy approach: correlations.</p>
+<p>The base R <code>cor()</code> function need the data in columns, that is, in a wide format. We use <code>spread()</code> from tidyr to transform the dataframe from long to wide.</p>
+<pre class="r"><code>feder_spendings_wide &lt;- feder_spendings %&gt;% 
+  select(department, year, rd_budget) %&gt;% 
+  spread(key   = department,
+         value = rd_budget)</code></pre>
+<p>Correlation matrix</p>
+<pre class="r"><code>feder_spendings_wide %&gt;% 
+  column_to_rownames(&quot;year&quot;) %&gt;%
+  cor() %&gt;% 
+  round(2) %&gt;% 
+  kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">DHS</th>
+<th align="right">DOC</th>
+<th align="right">DOD</th>
+<th align="right">DOE</th>
+<th align="right">DOT</th>
+<th align="right">EPA</th>
+<th align="right">HHS</th>
+<th align="right">Interior</th>
+<th align="right">NASA</th>
+<th align="right">NIH</th>
+<th align="right">NSF</th>
+<th align="right">Other</th>
+<th align="right">USDA</th>
+<th align="right">VA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>DHS</td>
+<td align="right">1.00</td>
+<td align="right">0.50</td>
+<td align="right">0.78</td>
+<td align="right">0.02</td>
+<td align="right">0.22</td>
+<td align="right">-0.34</td>
+<td align="right">0.86</td>
+<td align="right">-0.36</td>
+<td align="right">0.15</td>
+<td align="right">0.86</td>
+<td align="right">0.80</td>
+<td align="right">-0.24</td>
+<td align="right">0.76</td>
+<td align="right">0.74</td>
+</tr>
+<tr class="even">
+<td>DOC</td>
+<td align="right">0.50</td>
+<td align="right">1.00</td>
+<td align="right">0.36</td>
+<td align="right">-0.17</td>
+<td align="right">0.33</td>
+<td align="right">-0.11</td>
+<td align="right">0.78</td>
+<td align="right">-0.14</td>
+<td align="right">0.55</td>
+<td align="right">0.77</td>
+<td align="right">0.78</td>
+<td align="right">-0.16</td>
+<td align="right">0.74</td>
+<td align="right">0.77</td>
+</tr>
+<tr class="odd">
+<td>DOD</td>
+<td align="right">0.78</td>
+<td align="right">0.36</td>
+<td align="right">1.00</td>
+<td align="right">-0.28</td>
+<td align="right">-0.07</td>
+<td align="right">-0.51</td>
+<td align="right">0.77</td>
+<td align="right">-0.61</td>
+<td align="right">-0.08</td>
+<td align="right">0.78</td>
+<td align="right">0.73</td>
+<td align="right">-0.38</td>
+<td align="right">0.73</td>
+<td align="right">0.61</td>
+</tr>
+<tr class="even">
+<td>DOE</td>
+<td align="right">0.02</td>
+<td align="right">-0.17</td>
+<td align="right">-0.28</td>
+<td align="right">1.00</td>
+<td align="right">0.27</td>
+<td align="right">0.05</td>
+<td align="right">-0.11</td>
+<td align="right">0.57</td>
+<td align="right">0.01</td>
+<td align="right">-0.12</td>
+<td align="right">0.00</td>
+<td align="right">0.53</td>
+<td align="right">-0.16</td>
+<td align="right">-0.01</td>
+</tr>
+<tr class="odd">
+<td>DOT</td>
+<td align="right">0.22</td>
+<td align="right">0.33</td>
+<td align="right">-0.07</td>
+<td align="right">0.27</td>
+<td align="right">1.00</td>
+<td align="right">0.31</td>
+<td align="right">0.23</td>
+<td align="right">0.38</td>
+<td align="right">0.29</td>
+<td align="right">0.22</td>
+<td align="right">0.22</td>
+<td align="right">-0.05</td>
+<td align="right">0.25</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="even">
+<td>EPA</td>
+<td align="right">-0.34</td>
+<td align="right">-0.11</td>
+<td align="right">-0.51</td>
+<td align="right">0.05</td>
+<td align="right">0.31</td>
+<td align="right">1.00</td>
+<td align="right">-0.35</td>
+<td align="right">0.52</td>
+<td align="right">0.52</td>
+<td align="right">-0.36</td>
+<td align="right">-0.46</td>
+<td align="right">0.15</td>
+<td align="right">-0.21</td>
+<td align="right">-0.38</td>
+</tr>
+<tr class="odd">
+<td>HHS</td>
+<td align="right">0.86</td>
+<td align="right">0.78</td>
+<td align="right">0.77</td>
+<td align="right">-0.11</td>
+<td align="right">0.23</td>
+<td align="right">-0.35</td>
+<td align="right">1.00</td>
+<td align="right">-0.38</td>
+<td align="right">0.32</td>
+<td align="right">1.00</td>
+<td align="right">0.96</td>
+<td align="right">-0.28</td>
+<td align="right">0.92</td>
+<td align="right">0.93</td>
+</tr>
+<tr class="even">
+<td>Interior</td>
+<td align="right">-0.36</td>
+<td align="right">-0.14</td>
+<td align="right">-0.61</td>
+<td align="right">0.57</td>
+<td align="right">0.38</td>
+<td align="right">0.52</td>
+<td align="right">-0.38</td>
+<td align="right">1.00</td>
+<td align="right">0.39</td>
+<td align="right">-0.40</td>
+<td align="right">-0.32</td>
+<td align="right">0.52</td>
+<td align="right">-0.33</td>
+<td align="right">-0.36</td>
+</tr>
+<tr class="odd">
+<td>NASA</td>
+<td align="right">0.15</td>
+<td align="right">0.55</td>
+<td align="right">-0.08</td>
+<td align="right">0.01</td>
+<td align="right">0.29</td>
+<td align="right">0.52</td>
+<td align="right">0.32</td>
+<td align="right">0.39</td>
+<td align="right">1.00</td>
+<td align="right">0.31</td>
+<td align="right">0.24</td>
+<td align="right">0.23</td>
+<td align="right">0.40</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="even">
+<td>NIH</td>
+<td align="right">0.86</td>
+<td align="right">0.77</td>
+<td align="right">0.78</td>
+<td align="right">-0.12</td>
+<td align="right">0.22</td>
+<td align="right">-0.36</td>
+<td align="right">1.00</td>
+<td align="right">-0.40</td>
+<td align="right">0.31</td>
+<td align="right">1.00</td>
+<td align="right">0.96</td>
+<td align="right">-0.29</td>
+<td align="right">0.92</td>
+<td align="right">0.93</td>
+</tr>
+<tr class="odd">
+<td>NSF</td>
+<td align="right">0.80</td>
+<td align="right">0.78</td>
+<td align="right">0.73</td>
+<td align="right">0.00</td>
+<td align="right">0.22</td>
+<td align="right">-0.46</td>
+<td align="right">0.96</td>
+<td align="right">-0.32</td>
+<td align="right">0.24</td>
+<td align="right">0.96</td>
+<td align="right">1.00</td>
+<td align="right">-0.23</td>
+<td align="right">0.82</td>
+<td align="right">0.95</td>
+</tr>
+<tr class="even">
+<td>Other</td>
+<td align="right">-0.24</td>
+<td align="right">-0.16</td>
+<td align="right">-0.38</td>
+<td align="right">0.53</td>
+<td align="right">-0.05</td>
+<td align="right">0.15</td>
+<td align="right">-0.28</td>
+<td align="right">0.52</td>
+<td align="right">0.23</td>
+<td align="right">-0.29</td>
+<td align="right">-0.23</td>
+<td align="right">1.00</td>
+<td align="right">-0.26</td>
+<td align="right">-0.27</td>
+</tr>
+<tr class="odd">
+<td>USDA</td>
+<td align="right">0.76</td>
+<td align="right">0.74</td>
+<td align="right">0.73</td>
+<td align="right">-0.16</td>
+<td align="right">0.25</td>
+<td align="right">-0.21</td>
+<td align="right">0.92</td>
+<td align="right">-0.33</td>
+<td align="right">0.40</td>
+<td align="right">0.92</td>
+<td align="right">0.82</td>
+<td align="right">-0.26</td>
+<td align="right">1.00</td>
+<td align="right">0.78</td>
+</tr>
+<tr class="even">
+<td>VA</td>
+<td align="right">0.74</td>
+<td align="right">0.77</td>
+<td align="right">0.61</td>
+<td align="right">-0.01</td>
+<td align="right">0.25</td>
+<td align="right">-0.38</td>
+<td align="right">0.93</td>
+<td align="right">-0.36</td>
+<td align="right">0.23</td>
+<td align="right">0.93</td>
+<td align="right">0.95</td>
+<td align="right">-0.27</td>
+<td align="right">0.78</td>
+<td align="right">1.00</td>
+</tr>
+</tbody>
+</table>
+<p>It’s a bit difficult to see the patterns so let’s get a nice graphic visualization.</p>
+<p>I use the <code>ggally</code> packages, which draws nice heatmaps out of a correlation matrix for us. To do this without the aid of yet another helper package, see <a href="%22https://otho.netlify.com/post/government-funding/#explore---which-agencies-get-similar-funding%22">Otho’s code</a></p>
+<p>the <code>ggcorr()</code> function also take data with variables to correlate stored in columns, like the base R function.</p>
+<pre class="r"><code>ggcorr(feder_spendings_wide,
+       label = TRUE,
+       nbreaks = 7,
+       palette = &quot;RdBu&quot;) </code></pre>
+<p><img src="/content/post/2019-02-22-tidytuesday-7-u-s-research-development-budget-part-2_files/figure-html/ggcorr-1.png" width="768" /></p>
+<p>There are groups of agencies whose funding with time seem to be quite correlated (for example: DOD, NIH, NSF, HHS). To further explore the similarities of the evolution of funding between agencies, let’s make a little cluster analysis.</p>
+</div>
+<div id="cluster-analysis" class="section level1">
+<h1>Cluster analysis</h1>
+<p>In a cluster analysis, we try to create clusters of agencies where funding is similar within cluster, and dissimilar between clusters.</p>
+<p>We are going to use an agglomerative type of clustering: we begin with observations, we combine the more similar in clusters, and then we merge clusters that are similar until we are satisfied. It is a bottom-up approach.</p>
+<p>There are many way to measure the <em>similarity</em> between observations or clusters. Here we will use the <strong>euclidian distance</strong> as a metric, which is a reasonable choice for continuous numerical values.</p>
+<div id="scaling" class="section level2">
+<h2>Scaling</h2>
+<p>Since there is a huge variation in the magnitude of the budget received by the agencies, we cannot perform the clustering on the raw data, We want the similarities in the temporal evolution of funding, so we need to scale/normalize the data.</p>
+<p>A pretty common scaling is made by substracting the mean and dividing by the standard deviation or the variance. However, this leads to negative values of funding, which is not very nice. Otho decided to scale the data between 0 and 1, and I follow his lead. To do that, we use the <code>rescale()</code> function from the <code>scale</code> package that we used in the previous post.</p>
+<p>This is also a nice example of how to use the <code>mutate_at()</code> from the <code>dplyr</code> package, which allows automatic selection of column on which to apply a function. Here we select columns whose title countain “year”.</p>
+<pre class="r"><code># scale each variable between 0 and 1
+feder_wide_01 &lt;- 
+  feder_spendings_wide %&gt;%
+  mutate_at(vars(-contains(&quot;year&quot;)),
+            ~scales::rescale(., to = c(0,1),
+                             from = c(0, max(.))))
+
+
+# this is how it looks after scaling and rounding
+feder_wide_01 %&gt;% 
+  head() %&gt;% 
+  round(2) %&gt;% 
+  kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">year</th>
+<th align="right">DHS</th>
+<th align="right">DOC</th>
+<th align="right">DOD</th>
+<th align="right">DOE</th>
+<th align="right">DOT</th>
+<th align="right">EPA</th>
+<th align="right">HHS</th>
+<th align="right">Interior</th>
+<th align="right">NASA</th>
+<th align="right">NIH</th>
+<th align="right">NSF</th>
+<th align="right">Other</th>
+<th align="right">USDA</th>
+<th align="right">VA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1976</td>
+<td align="right">0</td>
+<td align="right">0.45</td>
+<td align="right">0.38</td>
+<td align="right">0.69</td>
+<td align="right">0.94</td>
+<td align="right">0.82</td>
+<td align="right">0.25</td>
+<td align="right">0.98</td>
+<td align="right">0.85</td>
+<td align="right">0.23</td>
+<td align="right">0.38</td>
+<td align="right">0.48</td>
+<td align="right">0.59</td>
+<td align="right">0.30</td>
+</tr>
+<tr class="even">
+<td align="right">1977</td>
+<td align="right">0</td>
+<td align="right">0.46</td>
+<td align="right">0.40</td>
+<td align="right">0.88</td>
+<td align="right">0.90</td>
+<td align="right">0.82</td>
+<td align="right">0.26</td>
+<td align="right">0.92</td>
+<td align="right">0.86</td>
+<td align="right">0.23</td>
+<td align="right">0.38</td>
+<td align="right">0.52</td>
+<td align="right">0.58</td>
+<td align="right">0.27</td>
+</tr>
+<tr class="odd">
+<td align="right">1978</td>
+<td align="right">0</td>
+<td align="right">0.48</td>
+<td align="right">0.39</td>
+<td align="right">1.00</td>
+<td align="right">0.95</td>
+<td align="right">1.00</td>
+<td align="right">0.28</td>
+<td align="right">0.96</td>
+<td align="right">0.85</td>
+<td align="right">0.25</td>
+<td align="right">0.39</td>
+<td align="right">0.50</td>
+<td align="right">0.63</td>
+<td align="right">0.26</td>
+</tr>
+<tr class="even">
+<td align="right">1979</td>
+<td align="right">0</td>
+<td align="right">0.52</td>
+<td align="right">0.39</td>
+<td align="right">1.00</td>
+<td align="right">0.82</td>
+<td align="right">0.94</td>
+<td align="right">0.27</td>
+<td align="right">1.00</td>
+<td align="right">0.89</td>
+<td align="right">0.26</td>
+<td align="right">0.38</td>
+<td align="right">0.94</td>
+<td align="right">0.66</td>
+<td align="right">0.26</td>
+</tr>
+<tr class="odd">
+<td align="right">1980</td>
+<td align="right">0</td>
+<td align="right">0.52</td>
+<td align="right">0.39</td>
+<td align="right">0.97</td>
+<td align="right">0.86</td>
+<td align="right">0.77</td>
+<td align="right">0.27</td>
+<td align="right">0.92</td>
+<td align="right">0.94</td>
+<td align="right">0.26</td>
+<td align="right">0.38</td>
+<td align="right">1.00</td>
+<td align="right">0.61</td>
+<td align="right">0.26</td>
+</tr>
+<tr class="even">
+<td align="right">1981</td>
+<td align="right">0</td>
+<td align="right">0.45</td>
+<td align="right">0.44</td>
+<td align="right">0.94</td>
+<td align="right">0.80</td>
+<td align="right">0.77</td>
+<td align="right">0.26</td>
+<td align="right">0.84</td>
+<td align="right">0.90</td>
+<td align="right">0.24</td>
+<td align="right">0.37</td>
+<td align="right">0.78</td>
+<td align="right">0.63</td>
+<td align="right">0.28</td>
+</tr>
+</tbody>
+</table>
+<p>To perform the hierarchical clustering, we need to transpose the data, because the <code>hcclust()</code> function clusters the rows, not the columns of a data frame.</p>
+<pre class="r"><code>rd_for_clust &lt;- feder_wide_01 %&gt;%
+  column_to_rownames(&quot;year&quot;) %&gt;%
+  t() </code></pre>
+<p>Now we take the Euclidean distance, and we do the hierarchical clustering.</p>
+<pre class="r"><code>rd_hclust &lt;- rd_for_clust %&gt;% 
+  dist() %&gt;%  # Euclidean distance
+  hclust()    # hierarchical cluster on dissimilarity</code></pre>
+<p>Now we visualize.</p>
+<pre class="r"><code>rd_hclust %&gt;% plot()</code></pre>
+<p><img src="/content/post/2019-02-22-tidytuesday-7-u-s-research-development-budget-part-2_files/figure-html/tree-1.png" width="672" /></p>
+<p>We can have a nicer plt with the <code>superheat()</code> function from the <code>superheat</code> package.</p>
+<pre class="r"><code>rd_for_clust %&gt;% 
+  superheat::superheat(row.dendrogram = TRUE,
+                       left.label.text.size = 5,
+                       left.label.text.alignment = &quot;center&quot;,
+                       
+                       bottom.label.text.angle = 90,
+                       bottom.label.text.size = 5,
+                       
+                       grid.hline.col = &quot;grey40&quot;,
+                       grid.vline.col = &quot;grey40&quot;,
+                       
+                       title      = &quot;U.S. R&amp;D funding&quot;,
+                       title.size = 8,
+                       
+                       row.title      = &quot;Federal agencies&quot;,
+                       row.title.size = 6,
+                       
+                       column.title   = &quot;Year&quot;,
+                       column.title.size = 6)</code></pre>
+<p><img src="/content/post/2019-02-22-tidytuesday-7-u-s-research-development-budget-part-2_files/figure-html/heatmap-1.png" width="768" /></p>
+<ul>
+<li><p>The <strong>DHS</strong> (Department of Homeland Security) is the most outer group, which is probably because the agency was established in the way it is now in 2001 (after the 11 September terrorist attacks).</p></li>
+<li><p><strong>VA</strong>, <strong>HHS</strong>, <strong>NIH</strong> and <strong>HHS</strong> cluster together, with an increase of funding in the 2000’s, but very low funding before.</p></li>
+<li><p><strong>USDA</strong>, <strong>DOD</strong> ans <strong>DOC</strong> also have higher funding recently, but more in the early 2000’s than now.</p></li>
+<li><p><strong>EPA</strong> and Others cluster together, a very early peak of funding, and then very low and decreasing funding.</p></li>
+<li><p><strong>Interior</strong>, <strong>DOE</strong>, <strong>DOT</strong> and <strong>NASA</strong> are in the same group, which is the “heterogeneous group”, with funding increasing and decreasing at various moments.</p></li>
+</ul>
+</div>
+</div>

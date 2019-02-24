@@ -1,5 +1,5 @@
 ---
-title: '#Tidytuesday 7: U.S. Research & Development Budget'
+title: '#Tidytuesday 7: U.S. Research & Development Budget (part 1)'
 author: Mathilde Mousset
 date: '2019-02-19'
 slug: tidytuesday-7-u-s-research-development-budget
@@ -27,7 +27,7 @@ output:
 </ul>
 </div>
 
-<p>This week <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12">Tidytuesday’s data</a> concern US research and development budget. Three files were provided, with budget data for Research &amp; Development, climate and energy.</p>
+<p>This week <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12">Tidytuesday’s data</a> concern US research and development budget. Three files were provided, with budget data for Research &amp; Development, climate and energy. This dataset was originally collected by the <a href="%22https://www.aaas.org/%22">American Association for the Advancement of Science</a>.</p>
 <p>I will focus on the R&amp;D budget. I wish to know which agencies get the highest funding, and how research funding evolved in the past 40 years. I kind of suspect that they decreased, and I would like to check whether that’s true.</p>
 <p>Today’s exploration will be quite simple, and I will use mostly <code>dplyr</code> to summarise data per agencies, and <code>ggplot2</code> to plot things. A little trick, though is the package <code>scales</code> that is used to write percentage signs on the plot axis.</p>
 <p>And I use the <code>hrbrthemes</code> for the beautiful themes. One day I will make my own professional-looking theme. One day…</p>

@@ -1,0 +1,171 @@
+---
+title: '#Tidytuesday 7: U.S. R&D Budget (part 2): hierarchical clustering'
+author: Mathilde Mousset
+date: '2019-02-22'
+slug: tidytuesday-7-u-s-research-development-budget-part-2
+categories: []
+tags:
+  - data visualisation
+  - data analysis
+  - R
+  - TidyTuesday
+  - hierarchical clustering
+editor_options: 
+  chunk_output_type: console
+---
+
+I will use the #Tidytuesday data on [U.S. R&D funding](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-12) to perform a simple cluster analysis in R. Since I never performed such an analysis in R, I followed and somewhat modified the code written by [Otho Mantegazza]("https://otho.netlify.com/post/government-funding/").
+
+For details on the data set, see the previous post.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(scales)    # To scale things
+library(superheat) # for heatmaps
+library(GGally)    # Nice correlation plot
+library(knitr)     # Table
+```
+
+First we import the data directly from Github.
+
+```{r import_data}
+feder_spendings <- read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv")
+```
+
+The dataset is relatively simple. Here we are interested in the funding spent by the U.S. government to each of the federal agencies for R&D over the years. 
+
+# Correlation in funding over time
+
+We saw in the previous post that the temporal evolution of funding varies between agencies over time. We would like to better understand which agencies share similar trends in funding over time.
+
+First easy approach: correlations.
+
+The base R `cor()` function need the data in columns, that is, in a wide format. We use `spread()` from tidyr to transform the dataframe from long to wide.
+
+```{r}
+feder_spendings_wide <- feder_spendings %>% 
+  select(department, year, rd_budget) %>% 
+  spread(key   = department,
+         value = rd_budget)
+```
+
+Correlation matrix
+
+```{r corr}
+feder_spendings_wide %>% 
+  column_to_rownames("year") %>%
+  cor() %>% 
+  round(2) %>% 
+  kable()
+```
+
+It's a bit difficult to see the patterns so let's get a nice graphic visualization.
+
+
+I use the `ggally` packages, which draws nice heatmaps out of a correlation matrix for us. To do this without the aid of yet another helper package, see [Otho's code]("https://otho.netlify.com/post/government-funding/#explore---which-agencies-get-similar-funding")
+
+the `ggcorr()` function also take data with variables to correlate stored in columns, like the base R function.
+
+```{r ggcorr, fig.width=8}
+ggcorr(feder_spendings_wide,
+       label = TRUE,
+       nbreaks = 7,
+       palette = "RdBu") 
+```
+
+There are groups of agencies whose funding with time seem to be quite correlated (for example: DOD, NIH, NSF, HHS). To further explore the similarities of the evolution of funding between agencies, let's make a little cluster analysis. 
+
+
+# Cluster analysis
+
+In a cluster analysis, we try to create clusters of agencies where funding is similar within cluster, and dissimilar between clusters.
+
+We are going to use an agglomerative type of clustering: we begin with observations, we combine the more similar in clusters, and then we merge clusters that are similar until we are satisfied. It is a bottom-up approach.
+
+There are many way to measure the *similarity* between observations or clusters. Here we will use the **euclidian distance** as a metric, which is a reasonable choice for continuous numerical values.
+
+## Scaling
+
+Since there is a huge variation in the magnitude of the budget received by the agencies, we cannot perform the clustering on the raw data, We want the similarities in the temporal evolution of funding, so we need to scale/normalize the data. 
+
+A pretty common scaling is made by substracting the mean and dividing by the standard deviation or the variance. However, this leads to negative values of funding, which is not very nice. Otho decided to scale the data between 0 and 1, and I follow his lead. To do that, we use the `rescale()` function from the `scale` package that we used in the previous post.
+
+This is also a nice example of how to use the `mutate_at()` from the `dplyr` package, which allows automatic selection of column on which to apply a function. Here we select columns whose title countain "year".
+
+```{r scale}
+# scale each variable between 0 and 1
+feder_wide_01 <- 
+  feder_spendings_wide %>%
+  mutate_at(vars(-contains("year")),
+            ~scales::rescale(., to = c(0,1),
+                             from = c(0, max(.))))
+
+
+# this is how it looks after scaling and rounding
+feder_wide_01 %>% 
+  head() %>% 
+  round(2) %>% 
+  kable()
+```
+
+To perform the hierarchical clustering, we need to transpose the data, because the `hcclust()` function clusters the rows, not the columns of a data frame.
+
+```{r transpose}
+rd_for_clust <- feder_wide_01 %>%
+  column_to_rownames("year") %>%
+  t() 
+```
+
+Now we take the Euclidean distance, and we do the hierarchical clustering.
+
+```{r hclust}
+rd_hclust <- rd_for_clust %>% 
+  dist() %>%  # Euclidean distance
+  hclust()    # hierarchical cluster on dissimilarity
+```
+
+Now we visualize.
+
+```{r tree}
+rd_hclust %>% plot()
+```
+
+We can have a nicer plt with the `superheat()` function from the `superheat` package.
+
+```{r heatmap, fig.width=8}
+rd_for_clust %>% 
+  superheat::superheat(row.dendrogram = TRUE,
+                       left.label.text.size = 5,
+                       left.label.text.alignment = "center",
+                       
+                       bottom.label.text.angle = 90,
+                       bottom.label.text.size = 5,
+                       
+                       grid.hline.col = "grey40",
+                       grid.vline.col = "grey40",
+                       
+                       title      = "U.S. R&D funding",
+                       title.size = 8,
+                       
+                       row.title      = "Federal agencies",
+                       row.title.size = 6,
+                       
+                       column.title   = "Year",
+                       column.title.size = 6)
+```
+
+
+- The **DHS** (Department of Homeland Security) is the most outer group, which is probably because the agency was established in the way it is now in 2001 (after the 11 September terrorist attacks).
+
+- **VA**, **HHS**, **NIH** and **HHS** cluster together, with an increase of funding in the 2000's, but very low funding before.  
+
+- **USDA**, **DOD** ans **DOC** also have higher funding recently, but more in the early 2000's than now.   
+
+- **EPA** and Others cluster together, a very early peak of funding, and then very low and decreasing funding.  
+
+- **Interior**, **DOE**, **DOT** and **NASA** are in the same group, which is the "heterogeneous group", with funding increasing and decreasing at various moments.  
+
+
+
+
