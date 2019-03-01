@@ -1,0 +1,756 @@
+---
+title: Mapping SNCF stations
+author: Mathilde Mousset
+date: '2019-03-01'
+slug: mapping-sncf-stations
+categories: []
+tags:
+  - R
+  - TidyTuesday
+  - SNCF
+  - data visualisation
+output:
+  blogdown::html_page:
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+
+<div id="TOC">
+<ul>
+<li><a href="#part-1-on-the-path-to-the-dirty-data-hell-circles">Part 1: on the path to the dirty data hell circles</a><ul>
+<li><a href="#outer-circle-stations">Outer circle: stations</a></li>
+<li><a href="#second-inner-circle-joining">Second inner circle: joining</a></li>
+<li><a href="#first-inner-circle-fuzzyjoining">First inner circle: fuzzyjoining</a></li>
+<li><a href="#closing-thoughts-on-that-hell">Closing thoughts on that hell</a></li>
+</ul></li>
+<li><a href="#sncf-mapping-the-retour">SNCF mapping, the retour!</a><ul>
+<li><a href="#import-the-data">Import the data</a></li>
+<li><a href="#get-france-map">Get France map</a></li>
+<li><a href="#joining-station-files">Joining station files</a></li>
+<li><a href="#at-the-level-of-france">At the level of France</a></li>
+<li><a href="#paris-region-ile-de-france">Paris region (Ile-de-France)</a></li>
+</ul></li>
+</ul>
+</div>
+
+<p>Last take on the High Speed French Train delays. Thanks to my slighlty obsessive posting of delay graphs on Twitter, <a href="%22https://twitter.com/thomas_mock%22">Thomas Mock</a> suggested submiting the data to the <a href="%22https://github.com/rfordatascience/tidytuesday%22">#Tidytuesday</a> challenge. So did I, and now everybody is plotting graphs of French trains delays. It is so cool to see what other people did! I will probably make a best-of of what I really liked some day.</p>
+<center>
+<img src="https://media.giphy.com/media/3oKIPd0cPwxKl2zbPi/giphy.gif" />
+</center>
+<p>Anyway, originally, when I donwloaded the files from SNCF website for the first time, my aim was to map stations and plot their delays. However, things did not go as planned. This is what I wrote in the last post.</p>
+<blockquote>
+<blockquote>
+<p>Originally, for this post, I wanted to map the data on a French map, but I encountered a bit of trouble in getting the GPS coordinates of the stations, and I am still perfecting my fuzzyjoining. This might be a story for later, including the crushing of my cute naivety concerning name harmonizing in datasets made available within the same company.</p>
+</blockquote>
+</blockquote>
+<p>Today is the story of my crushed naivety, in the <strong>Part 1</strong>. Be ready for complaining, frustration, and no fairy-tale ending. I am mostly documenting it as a double reminder to myself: <em>i</em>) how to do fuzzyjoining and <em>ii</em>) why consistency in names is important, and ID columns should not be messed with!</p>
+<p>I however won’t admit defeat that easily. I am a scientist, and I have spent months counting thousands of seeds, one month figuring out the perfect timing for pollinating a small <em>Brassicaceae</em> that you never heard of (it’s a cool plant, though), weeks weighing plant bits and dissecting pollen anthesis under the binaucular. You don’t get me to quit that easily.</p>
+<p>One day, in the middle of the night, I remembered that I saw the number of people going through stations <em>somewhere</em>. I decided to have another go at mapping SNCF stations. This is the <strong>Part 2</strong>. Nothing too fancy, but we get to make some maps, eventually!</p>
+<div id="part-1-on-the-path-to-the-dirty-data-hell-circles" class="section level1">
+<h1>Part 1: on the path to the dirty data hell circles</h1>
+<p>We import a bunch of data files from the SNCF website.</p>
+<pre class="r"><code># Import data
+tgv &lt;- read_delim(&quot;2019-02-08-regularite-mensuelle-tgv-aqst.csv&quot;,
+                  &quot;;&quot;, escape_double = FALSE, trim_ws = TRUE)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_double(),
+##   service = col_character(),
+##   departure_station = col_character(),
+##   arrival_station = col_character(),
+##   cancelation_comment = col_logical(),
+##   comment_delay_departure = col_logical(),
+##   comment_delay_arrival = col_character(),
+##   year_month = col_character()
+## )</code></pre>
+<pre><code>## See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code>european_stations &lt;- read_delim(&quot;2019-03-01-european-train-stations.csv&quot;,
+                                &quot;;&quot;, escape_double = FALSE, trim_ws = TRUE)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_character(),
+##   id = col_double(),
+##   uic = col_double(),
+##   uic8_sncf = col_double(),
+##   parent_station_id = col_double(),
+##   is_city = col_logical(),
+##   is_main_station = col_logical(),
+##   is_suggestable = col_logical(),
+##   sncf_is_enabled = col_logical(),
+##   idtgv_is_enabled = col_logical(),
+##   db_id = col_double(),
+##   db_is_enabled = col_logical(),
+##   busbud_is_enabled = col_logical(),
+##   ouigo_is_enabled = col_logical(),
+##   trenitalia_id = col_double(),
+##   trenitalia_is_enabled = col_logical(),
+##   ntv_rtiv_id = col_logical(),
+##   ntv_is_enabled = col_logical(),
+##   hkx_id = col_logical(),
+##   hkx_is_enabled = col_logical(),
+##   renfe_id = col_double()
+##   # ... with 5 more columns
+## )
+## See spec(...) for full column specifications.</code></pre>
+<pre><code>## Warning: 35 parsing failures.
+##  row         col           expected    actual                                     file
+## 2939 hkx_id      1/0/T/F/TRUE/FALSE 108000044 &#39;2019-03-01-european-train-stations.csv&#39;
+## 4090 ntv_rtiv_id 1/0/T/F/TRUE/FALSE 1325      &#39;2019-03-01-european-train-stations.csv&#39;
+## 5006 hkx_id      1/0/T/F/TRUE/FALSE 108000105 &#39;2019-03-01-european-train-stations.csv&#39;
+## 5313 ntv_rtiv_id 1/0/T/F/TRUE/FALSE 3009      &#39;2019-03-01-european-train-stations.csv&#39;
+## 5658 ntv_rtiv_id 1/0/T/F/TRUE/FALSE 2617      &#39;2019-03-01-european-train-stations.csv&#39;
+## .... ........... .................. ......... ........................................
+## See problems(...) for more details.</code></pre>
+<pre class="r"><code>gares &lt;- read_delim(&quot;2019-03-01-referentiel-gares-voyageurs.csv&quot;, 
+                    &quot;;&quot;, escape_double = FALSE, trim_ws = TRUE)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_character(),
+##   `Nbre plateformes` = col_double(),
+##   `Code postal` = col_double(),
+##   `Code commune` = col_double(),
+##   `Code département` = col_double(),
+##   `Longitude WGS84` = col_double(),
+##   `Latitude WGS84` = col_double(),
+##   `Code UIC` = col_double(),
+##   `Niveau de service` = col_double(),
+##   SOP = col_logical(),
+##   `Date fin validité plateforme` = col_date(format = &quot;&quot;)
+## )
+## See spec(...) for full column specifications.</code></pre>
+<p>These data are from the Open Data from the SNCF website, and you can also find them on the #Tidytuesday website.</p>
+<div id="outer-circle-stations" class="section level2">
+<h2>Outer circle: stations</h2>
+<p>So here are the train stations in the dataset:</p>
+<pre class="r"><code>tgv$arrival_station %&gt;% unique()</code></pre>
+<pre><code>##  [1] &quot;METZ&quot;                           &quot;PARIS EST&quot;                     
+##  [3] &quot;STRASBOURG&quot;                     &quot;AVIGNON TGV&quot;                   
+##  [5] &quot;BELLEGARDE (AIN)&quot;               &quot;BESANCON FRANCHE COMTE TGV&quot;    
+##  [7] &quot;PARIS LYON&quot;                     &quot;GRENOBLE&quot;                      
+##  [9] &quot;MACON LOCHE&quot;                    &quot;MARSEILLE ST CHARLES&quot;          
+## [11] &quot;MULHOUSE VILLE&quot;                 &quot;ANGERS SAINT LAUD&quot;             
+## [13] &quot;PARIS MONTPARNASSE&quot;             &quot;POITIERS&quot;                      
+## [15] &quot;RENNES&quot;                         &quot;FRANCFORT&quot;                     
+## [17] &quot;LAUSANNE&quot;                       &quot;PARIS NORD&quot;                    
+## [19] &quot;LILLE&quot;                          &quot;NANCY&quot;                         
+## [21] &quot;LE CREUSOT MONTCEAU MONTCHANIN&quot; &quot;NICE VILLE&quot;                    
+## [23] &quot;ZURICH&quot;                         &quot;NANTES&quot;                        
+## [25] &quot;VANNES&quot;                         &quot;DOUAI&quot;                         
+## [27] &quot;DUNKERQUE&quot;                      &quot;LYON PART DIEU&quot;                
+## [29] &quot;DIJON VILLE&quot;                    &quot;PERPIGNAN&quot;                     
+## [31] &quot;TOULOUSE MATABIAU&quot;              &quot;ARRAS&quot;                         
+## [33] &quot;REIMS&quot;                          &quot;NIMES&quot;                         
+## [35] &quot;TOULON&quot;                         &quot;BORDEAUX ST JEAN&quot;              
+## [37] &quot;LE MANS&quot;                        &quot;STUTTGART&quot;                     
+## [39] &quot;GENEVE&quot;                         &quot;ANGOULEME&quot;                     
+## [41] &quot;VALENCE ALIXAN TGV&quot;             &quot;ITALIE&quot;                        
+## [43] &quot;MONTPELLIER&quot;                    &quot;ST MALO&quot;                       
+## [45] &quot;BREST&quot;                          &quot;LA ROCHELLE VILLE&quot;             
+## [47] &quot;AIX EN PROVENCE TGV&quot;            &quot;LAVAL&quot;                         
+## [49] &quot;QUIMPER&quot;                        &quot;ANNECY&quot;                        
+## [51] &quot;CHAMBERY CHALLES LES EAUX&quot;      &quot;ST PIERRE DES CORPS&quot;           
+## [53] &quot;SAINT ETIENNE CHATEAUCREUX&quot;     &quot;TOURS&quot;                         
+## [55] &quot;TOURCOING&quot;                      &quot;BARCELONA&quot;                     
+## [57] &quot;PARIS VAUGIRARD&quot;                &quot;MARNE LA VALLEE&quot;               
+## [59] &quot;MADRID&quot;</code></pre>
+<p>There is a mix of French and European stations. I would like to plot them on a map of Europe, so I need to fetch their GPS coordinates.</p>
+<p>I found a <a href="%22https://public.opendatasoft.com/explore/dataset/european-train-stations/information/%22">datafile</a> from <a href="%22https://www.trainline.fr/%22">Trainline</a>, a train travel agent with the location of all the stations that are in their database. As they sell french train tickets, the stations in the SNCF dataset should be referenced in their database. I <em>just</em> have to join them.</p>
+<p>Some text cleaning first: I use the <code>str_to_title()</code> function from <code>stringr</code> to change all caps to title caps.</p>
+<pre class="r"><code>tgv &lt;- tgv %&gt;% 
+  mutate(arrival_station = str_to_title(arrival_station),
+         departure_station = str_to_title(departure_station))</code></pre>
+</div>
+<div id="second-inner-circle-joining" class="section level2">
+<h2>Second inner circle: joining</h2>
+<p>Ok, let’s see which stations will not get coordinates.</p>
+<pre class="r"><code>anti_join(tgv, european_stations, by = c(&quot;arrival_station&quot; = &quot;name&quot;)) %&gt;% nrow()</code></pre>
+<pre><code>## [1] 3046</code></pre>
+<p>Like… a lot. How is that so? Let’s have a look at Paris stations.</p>
+<pre class="r"><code>tgv %&gt;% 
+  select(arrival_station) %&gt;%
+  filter(str_detect(arrival_station, &quot;Paris&quot;)) %&gt;% 
+  distinct()</code></pre>
+<pre><code>## # A tibble: 5 x 1
+##   arrival_station   
+##   &lt;chr&gt;             
+## 1 Paris Est         
+## 2 Paris Lyon        
+## 3 Paris Montparnasse
+## 4 Paris Nord        
+## 5 Paris Vaugirard</code></pre>
+<pre class="r"><code>european_stations %&gt;% 
+  select(name) %&gt;%
+  filter(str_detect(name, &quot;Paris&quot;)) %&gt;% 
+  distinct()</code></pre>
+<pre><code>## # A tibble: 39 x 1
+##    name                          
+##    &lt;chr&gt;                         
+##  1 Paris Gare de Lyon RER        
+##  2 Atlb Paris Nord               
+##  3 Paris Pereire Saussure        
+##  4 Paris Ampère Wagram           
+##  5 Paris Bercy Commercial        
+##  6 Paris Gare du Nord            
+##  7 Paris Montparnasse 3 Vaugirard
+##  8 Paris Tolbiac TAA             
+##  9 Paris Section urbaine         
+## 10 Paris Gare de Lyon A          
+## # ... with 29 more rows</code></pre>
+<p>Because the names are completly different, that’s why!</p>
+<center>
+<img src="https://media.giphy.com/media/xUOxeRVBTkYT2yOC5y/giphy.gif" />
+</center>
+<p>This sucks. <em>Time for Plan B.</em></p>
+<p>I can see that the trainline file has <code>uic</code>, <code>uic8_sncf</code> and <code>sncf_id</code> columns. Which means that somewhere in the SNCF 300 open datasets, there <em>must be</em> a list of stations with their UIC<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> code and/or some SNCF ID. It has to!</p>
+<p>Some internet searching later…</p>
+<p>There is a file that seems to be the station database of <a href="%22https://data.sncf.com/explore/dataset/referentiel-gares-voyageurs/information/?sort=-intitule_gare%22">SNCF</a>. With all the crunchy little details such as the town, the department, the name of the station as it is written on the building, the number of platforms and, conveniently, longitude and latitude.</p>
+<p>Perfect.</p>
+<p>To get a feel of how nice things are going to be, let’s check the Paris station names again.</p>
+<pre class="r"><code>gares %&gt;% 
+  select(`Intitulé gare`) %&gt;%
+  filter(str_detect(`Intitulé gare`, &quot;Paris&quot;)) %&gt;% 
+  distinct()</code></pre>
+<pre><code>## # A tibble: 14 x 1
+##    `Intitulé gare`                        
+##    &lt;chr&gt;                                  
+##  1 Paris Montparnasse Hall 1 &amp; 2          
+##  2 Paris Gare du Nord                     
+##  3 Paris Saint-Lazare                     
+##  4 Paris Austerlitz Souterrain            
+##  5 Paris Austerlitz                       
+##  6 Paris Montparnasse Vaugirard           
+##  7 Cormeilles-en-Parisis                  
+##  8 Paris Gare du Nord Souterrain          
+##  9 Paris Gare du Nord transmanche         
+## 10 Paris Est                              
+## 11 Paris Bercy Bourgogne - Pays d&#39;Auvergne
+## 12 Paris Gare du Nord Surface Banlieue    
+## 13 Paris Gare de Lyon Hall 1 &amp; 2          
+## 14 Paris Gare de Lyon Souterrain</code></pre>
+<p>That… what… how… <em>je ne sais que dire</em>…</p>
+<p>I am <em>unpleasantly</em> surprised by some of what I read, to say the least.</p>
+<p>For example, we have “Paris Est” (not “Paris Gare de l’Est”) and “Paris Gare du Nord…” (not “Paris Nord”). Why mixing the short and long names?</p>
+<p>Other example, “Paris Gare de Lyon Souterrain”&quot; and “Paris Gare de Lyon Hall 1 &amp; 2”&quot; are counted as different stations. Souterrain means “underground”, if you need to know. And I may be wrong but I think that in the station, it’s actually called “Hall 3”.</p>
+<p>Obviously, the SNCF did not harmonize its station names accross its own files. I am sure there is a special hell for the kind of people who would do that.</p>
+<center>
+<img src="https://media.giphy.com/media/kSA7u0tUziLXq/giphy.gif" />
+</center>
+<p>Plan C: time to use some fuzzy joining, then.</p>
+<center>
+<img src="https://media.giphy.com/media/3o8doT5DaMjfH3paHC/giphy.gif" />
+</center>
+</div>
+<div id="first-inner-circle-fuzzyjoining" class="section level2">
+<h2>First inner circle: fuzzyjoining</h2>
+<p>I have to be honest, I never tried fuzzy-joining anything before. I just read the name somewhere on Stackoverflow one day, and filled it for later use. Thank you brain.</p>
+<p>The <code>fuzzyjoin</code> <a href="%22https://github.com/dgrtwo/fuzzyjoin%22">package</a> is written by David Robinson and it helps joining columns where the text is not exaclty the same, that is, inexact matching.</p>
+<p>I believe that it is more targeted at text where there are some mistakes and small variations. Some of the names here differ by two words or more, so I was not completely sure of what would happen.</p>
+<p>There are several columns that could be of use: RG or UT. I have no idea what the titles mean.</p>
+<p>Some tidying first. I first remove the “GARE” for UT and RG because the word itself in not in the name of the stations in the other file. Then, I harmonize the St/Saint abbreviation problem. And if there are duplicates, I select one of them.</p>
+<pre class="r"><code>essai_gare &lt;- gares %&gt;% 
+  drop_na(`Latitude WGS84`, `Longitude WGS84`) %&gt;% 
+  mutate(intitule_plateforme = str_remove(`Intitulé plateforme`, &quot;Gare de|Gare du&quot;),
+         RG = str_to_title(str_remove(RG, &quot;GARE&quot;)),
+         UT = str_to_title(str_remove(UT, &quot;GARE&quot;))) %&gt;% 
+  select(name = &quot;Intitulé gare&quot;,
+         intitule_plateforme,
+         RG,
+         UT) %&gt;% 
+  filter(!(name %in% c(&quot;Toul&quot;, &quot;Die&quot;, &quot;Montchanin&quot;, &quot;Crest&quot;))) %&gt;% 
+  mutate(RG = str_replace(RG, &quot; St &quot;, &quot; Saint &quot;),
+         UT = str_replace(UT, &quot; St &quot;, &quot; Saint &quot;),
+         UT = str_replace(UT, &quot;St &quot;, &quot;Saint &quot;),
+         UT = str_remove(UT, &quot;^ P$&quot;)) %&gt;% 
+  group_by(UT) %&gt;% slice(1) %&gt;% ungroup()</code></pre>
+<p>Now, I prepare the tgv file.</p>
+<pre class="r"><code>essai_tgv &lt;- tgv %&gt;% 
+  select(departure_station) %&gt;% 
+  unique() %&gt;% 
+  mutate(departure_station = str_replace(departure_station, &quot; St &quot;, &quot; Saint &quot;),
+         departure_station = str_replace(departure_station, &quot;St &quot;, &quot;Saint &quot;))</code></pre>
+<p>And let’s gooo !</p>
+<pre class="r"><code>fuzzy_left_join(essai_tgv,
+                essai_gare,
+                by = c(&quot;departure_station&quot; = &quot;UT&quot;),
+                match_fun = str_detect) %&gt;% 
+  head(10)</code></pre>
+<pre><code>## # A tibble: 10 x 5
+##    departure_station         name  intitule_plateforme RG    UT   
+##    &lt;chr&gt;                     &lt;chr&gt; &lt;chr&gt;               &lt;chr&gt; &lt;chr&gt;
+##  1 Paris Est                 &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+##  2 Reims                     &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+##  3 Paris Lyon                &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+##  4 Chambery Challes Les Eaux &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+##  5 Lyon Part Dieu            &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+##  6 Montpellier               &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+##  7 Mulhouse Ville            &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+##  8 Paris Montparnasse        &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+##  9 Bordeaux Saint Jean       &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt; 
+## 10 La Rochelle Ville         &lt;NA&gt;  &lt;NA&gt;                &lt;NA&gt;  &lt;NA&gt;</code></pre>
+<p>It did not work well (you can print the whole table, 6 lines were joined).</p>
+<p>By looking at the names in the essai_gare, I noticed some weird spaces. We remove them.</p>
+<pre class="r"><code>essai_gare &lt;- select(essai_gare,
+                     name_departure = UT) %&gt;% 
+  mutate(name_departure = str_trim(name_departure)) %&gt;% 
+  na.omit()</code></pre>
+<p>And try again.</p>
+<pre class="r"><code>fuzzy_left_join(essai_tgv,
+                essai_gare,
+                by = c(&quot;departure_station&quot; = &quot;name_departure&quot;),
+                match_fun = str_detect) %&gt;% 
+  filter(is.na(name_departure))</code></pre>
+<pre><code>## # A tibble: 23 x 2
+##    departure_station  name_departure
+##    &lt;chr&gt;              &lt;chr&gt;         
+##  1 Lyon Part Dieu     &lt;NA&gt;          
+##  2 Mulhouse Ville     &lt;NA&gt;          
+##  3 Paris Montparnasse &lt;NA&gt;          
+##  4 Lille              &lt;NA&gt;          
+##  5 Nancy              &lt;NA&gt;          
+##  6 Rennes             &lt;NA&gt;          
+##  7 Nantes             &lt;NA&gt;          
+##  8 Zurich             &lt;NA&gt;          
+##  9 Metz               &lt;NA&gt;          
+## 10 Italie             &lt;NA&gt;          
+## # ... with 13 more rows</code></pre>
+<p>It is a bit better, I get 23 empty lines. Actually, a bit more because I have now some duplicates (Avignon, for example, because the Avignon station gets two matches from the right file, so it doubles its lines).</p>
+<p>Let’s try with the other fuzzyjoin function, which uses a distance to match elements. I am afraid it will yield many false positive, but let’s try.</p>
+<pre class="r"><code>stringdist_left_join(essai_tgv,
+                     essai_gare,
+                     by = c(&quot;departure_station&quot; = &quot;name_departure&quot;),
+                     max_dist = 1,
+                     ignore_case = FALSE) %&gt;% 
+  select(departure_station, name_departure) %&gt;%  filter(is.na(name_departure))</code></pre>
+<pre><code>## # A tibble: 24 x 2
+##    departure_station  name_departure
+##    &lt;chr&gt;              &lt;chr&gt;         
+##  1 Lyon Part Dieu     &lt;NA&gt;          
+##  2 Mulhouse Ville     &lt;NA&gt;          
+##  3 Paris Montparnasse &lt;NA&gt;          
+##  4 Macon Loche        &lt;NA&gt;          
+##  5 Nancy              &lt;NA&gt;          
+##  6 Rennes             &lt;NA&gt;          
+##  7 Valence Alixan Tgv &lt;NA&gt;          
+##  8 Zurich             &lt;NA&gt;          
+##  9 Metz               &lt;NA&gt;          
+## 10 Italie             &lt;NA&gt;          
+## # ... with 14 more rows</code></pre>
+<p>24 non matched lines and many wrong matches. There are probably ways to tweak the distance parameter to decrease these false positive, but I figured the other function is better suited.</p>
+<p>Except that then I spent a couple of more hours trying to get the fuzzyjoin to go further and I did not manage. I tried the other promising column too, to no end.</p>
+<p>At some point, I decided that I had lost enough of my life attempting to join SNCF files, and that I should move on. I forbade myslef to touch this script ever again, except to turn it into a bitter rant about the inegal quality of data on the internet.</p>
+<p>I now felt less lonely in this failure when I read that many people renounced joining the files during the #Tidytuesday challenge. I would be happy to know who managed, and how.</p>
+</div>
+<div id="closing-thoughts-on-that-hell" class="section level2">
+<h2>Closing thoughts on that hell</h2>
+<p>After giving some thinking to it while showering, I figured that I could do several joins, and reduce the right-hand side file little by little. The idea would be something like:</p>
+<ul>
+<li><p>Do the first fuzzyjoin. Get the lines that did not get a match from the left-hand-side (LHS).</p></li>
+<li><p>For the case where the failure happen because of the “Ville”/“TGV” problem, make two joins, one with the names that have “Ville” inside, and one with the names that have “TGV” inside.</p></li>
+<li><p>Get the rest. Try to remove duplicates from the RHS file, be either trimming the last(s) word(s).</p></li>
+<li><p>Do several loops of the last one.</p></li>
+</ul>
+<p>I think I could probably manage to get <em>something</em>. But it is an incredible dirty and painfull way of doing it. I decided that I had more interesting things to do with my life than compensating for dubious data-management on my free time<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>.</p>
+<p>I made my peace with not ploting anything related to SNCF on maps.</p>
+</div>
+</div>
+<div id="sncf-mapping-the-retour" class="section level1">
+<h1>SNCF mapping, the retour!</h1>
+<p>But then was I thinking of my future while shaving<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a> when I remembered seing the number of passengers going trhough stations <em>somewhere</em> on the SNCF Open data website. And that <em>is</em> a cool data to plot on a map.</p>
+<p>So mapping SNCF data, take 2!</p>
+<pre class="r"><code>library(janitor)</code></pre>
+<pre><code>## Warning: le package &#39;janitor&#39; a été compilé avec la version R 3.5.2</code></pre>
+<pre class="r"><code>library(hrbrthemes)
+
+library(sf)</code></pre>
+<pre><code>## Warning: le package &#39;sf&#39; a été compilé avec la version R 3.5.2</code></pre>
+<pre><code>## Linking to GEOS 3.6.1, GDAL 2.2.3, PROJ 4.9.3</code></pre>
+<pre class="r"><code>library(tmap)</code></pre>
+<pre><code>## Warning: le package &#39;tmap&#39; a été compilé avec la version R 3.5.2</code></pre>
+<pre class="r"><code>library(leaflet)</code></pre>
+<pre><code>## Warning: le package &#39;leaflet&#39; a été compilé avec la version R 3.5.2</code></pre>
+<pre class="r"><code>library(ggrepel)</code></pre>
+<pre><code>## Warning: le package &#39;ggrepel&#39; a été compilé avec la version R 3.5.2</code></pre>
+<p>I found a “station list” file, which is <em>not</em> the “reference list of station” file that we have attempted to put to use before. It countains the Lambert coordinates of all stations, so that’s sweet<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. We will let the station reference file sulk on its own in the directory forever, and use the station list file from now on.</p>
+<p>For the mapping, I will heavily rely on the advice from <a href="%22https://statnmap.com/2018-07-14-introduction-to-mapping-with-sf-and-co/%22">Sebastien Rochette</a>.</p>
+<p>We will use the <code>sf</code> package (for simple features), whose syntax is inspired from PostGIS. It is a relatively new package in R, but it is quite powerfull and quite handy. It enable us to manipulate <code>sf</code> objects as dataframes and to perform the usual operations on them (mutate, filter etc.).</p>
+<div id="import-the-data" class="section level2">
+<h2>Import the data</h2>
+<p><a href="%22https://data.sncf.com/explore/dataset/frequentation-gares/table/?sort=nom_gare%22">Data on the number of passengers in 2017 and 2018</a></p>
+<p>These data is based on the number of tickets bought for great lines, and an extrapolation out of countings performed every other year for regional trains in the Ile de France region (around Paris).</p>
+<p>People counted in: leaving, arriving, transiting.</p>
+<p><a href="%22https://data.sncf.com/explore/dataset/liste-des-gares/table/%22">List of stations with the Lambert Coordinates</a></p>
+<pre class="r"><code>station_freq &lt;- read_delim(&quot;2019-03-01-frequentation-gares.csv&quot;, 
+                           &quot;;&quot;, escape_double = FALSE, trim_ws = TRUE)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   `Nom de la gare` = col_character(),
+##   `Nb Plate-formes` = col_double(),
+##   `Nom de la plate-forme` = col_character(),
+##   `Code UIC` = col_character(),
+##   `Code postal` = col_double(),
+##   Segmentation = col_character(),
+##   `Total Voyageurs 2017` = col_double(),
+##   `Total Voyageurs 2016` = col_double()
+## )</code></pre>
+<pre class="r"><code>station_list &lt;- read_delim(&quot;2019-03-01-liste-des-gares.csv&quot;, 
+                           &quot;;&quot;, escape_double = FALSE, trim_ws = TRUE)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   CODE_UIC = col_double(),
+##   LIBELLE_GARE = col_character(),
+##   FRET = col_character(),
+##   VOYAGEURS = col_character(),
+##   CODE_LIGNE = col_double(),
+##   RANG = col_double(),
+##   PK = col_character(),
+##   COMMUNE = col_character(),
+##   DEPARTEMENT = col_character(),
+##   IDRESEAU = col_double(),
+##   IDGAIA = col_character(),
+##   `X (lambert93)` = col_double(),
+##   `Y (lambert93)` = col_double(),
+##   `X (WGS84)` = col_double(),
+##   `Y (WGS84)` = col_double(),
+##   coordonnees_geographiques = col_character()
+## )</code></pre>
+<pre class="r"><code>colnames(station_list)</code></pre>
+<pre><code>##  [1] &quot;CODE_UIC&quot;                  &quot;LIBELLE_GARE&quot;             
+##  [3] &quot;FRET&quot;                      &quot;VOYAGEURS&quot;                
+##  [5] &quot;CODE_LIGNE&quot;                &quot;RANG&quot;                     
+##  [7] &quot;PK&quot;                        &quot;COMMUNE&quot;                  
+##  [9] &quot;DEPARTEMENT&quot;               &quot;IDRESEAU&quot;                 
+## [11] &quot;IDGAIA&quot;                    &quot;X (lambert93)&quot;            
+## [13] &quot;Y (lambert93)&quot;             &quot;X (WGS84)&quot;                
+## [15] &quot;Y (WGS84)&quot;                 &quot;coordonnees_geographiques&quot;</code></pre>
+<pre class="r"><code>colnames(station_freq)</code></pre>
+<pre><code>## [1] &quot;Nom de la gare&quot;        &quot;Nb Plate-formes&quot;       &quot;Nom de la plate-forme&quot;
+## [4] &quot;Code UIC&quot;              &quot;Code postal&quot;           &quot;Segmentation&quot;         
+## [7] &quot;Total Voyageurs 2017&quot;  &quot;Total Voyageurs 2016&quot;</code></pre>
+<p>Spaces in names are not fun to manipulate in R. I use the <code>janitor</code> package to clean the names a bit.</p>
+<pre class="r"><code>station_list &lt;- clean_names(station_list)
+station_freq &lt;- clean_names(station_freq)</code></pre>
+<p>Now, let’s import the maps.</p>
+<pre class="r"><code>extraWD &lt;- &quot;.&quot;
+if (!file.exists(file.path(extraWD, &quot;departement.zip&quot;))) {
+  githubURL &lt;- &quot;https://github.com/statnmap/blog_tips/raw/master/2018-07-14-introduction-to-mapping-with-sf-and-co/data/departement.zip&quot;
+  download.file(githubURL, file.path(extraWD, &quot;departement.zip&quot;))
+  unzip(file.path(extraWD, &quot;departement.zip&quot;), exdir = extraWD)
+}</code></pre>
+<p>The data come from Sebastien Rochette’ Github page, but originally, they come from the Institut Nationnal de l’Information Géographique et Forestière, or <a href="%22http://www.ign.fr/%22">IGN</a>. If you are French and you never spent hours looking at maps on the <a href="%22https://www.geoportail.gouv.fr/%22">Geoportail</a> website, it is very sad.</p>
+<p>Anyway. We got Francde department data. We reproject with <code>st_transform()</code>.</p>
+<pre class="r"><code>departements_L93 &lt;- st_read(dsn   = extraWD, 
+                            layer = &quot;DEPARTEMENT&quot;,
+                            quiet = TRUE) %&gt;% 
+  st_transform(2154)</code></pre>
+</div>
+<div id="get-france-map" class="section level2">
+<h2>Get France map</h2>
+<p>Let’s see what it looks like.</p>
+<pre class="r"><code>france &lt;- ggplot(departements_L93) +
+  scale_fill_viridis_d() +
+  geom_sf() +
+  coord_sf(crs = 2154, datum = sf::st_crs(2154)) +
+  guides(fill = FALSE)
+
+france</code></pre>
+<p><img src="/post/2019-03-01-mapping-sncf-stations_files/figure-html/map_france-1.png" width="672" /></p>
+<p>So far, so good. This was the easy part. Now, let’s go back to joining our station location and station crowding data.</p>
+</div>
+<div id="joining-station-files" class="section level2">
+<h2>Joining station files</h2>
+<p>I am not even goint to <em>try to attempt</em> to join files using station names. There is a UIC code, that is, the internationnal railway code, and if it is not working, I am burning the directory and never touching a SNCF file ever again.</p>
+<p>In the <code>station_list</code> file, the UIC codes are numeric, let’s put them in character, as in the other file. Also, the station list has stations that are not open for public (only fret trains), we filter them out.</p>
+<pre class="r"><code>station_list_voyageurs &lt;- mutate(station_list,
+                                 code_uic = as.character(code_uic)) %&gt;% 
+  filter(voyageurs == &quot;O&quot;)</code></pre>
+<p>Now we go for the filter! (hold one’s breath)</p>
+<pre class="r"><code>station_all &lt;- left_join(station_list_voyageurs,
+                         station_freq,
+                         by = c(&quot;code_uic&quot; = &quot;code_uic&quot;))</code></pre>
+<p>Good sign, the number of lines remained the same. Let’s look.</p>
+<pre class="r"><code>head(station_all) %&gt;% select(code_uic, nom_de_la_gare)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   code_uic nom_de_la_gare
+##   &lt;chr&gt;    &lt;chr&gt;         
+## 1 87342139 &lt;NA&gt;          
+## 2 87342048 &lt;NA&gt;          
+## 3 87334508 &lt;NA&gt;          
+## 4 87342105 &lt;NA&gt;          
+## 5 87342006 &lt;NA&gt;          
+## 6 87328021 &lt;NA&gt;</code></pre>
+<p>NA, NA, NA, NA… It’s NA all the way down.</p>
+<p>Why?</p>
+Well, apparently, the UIC codes differ in the two files.
+<center>
+<img src="https://media.giphy.com/media/3oEdv92AGpZJ3S5Co0/giphy.gif" />
+</center>
+<p>How <em>naïve</em> of me to have assumed that the SNCF would harmonize the International Railway codes of their stations between their files.</p>
+<p>Uppon inspection, it seems that there is a “87” in front of all UIC codes in the <code>station_list</code> file. I have no interest in knowing why, I will remove it (dirtily) and hope for the best.</p>
+<pre class="r"><code>station_list_voyageurs &lt;- mutate(station_list_voyageurs,
+                                 CODE_UIC_BETTER_BE_GOOD = str_replace(code_uic,
+                                                                       &quot;87&quot;,
+                                                                       &quot;&quot;))
+
+station_all &lt;- left_join(station_freq,
+                         station_list_voyageurs,
+                         by = c(&quot;code_uic&quot; = &quot;CODE_UIC_BETTER_BE_GOOD&quot;))</code></pre>
+<p>So now I have more lines in the file after the left join, which suggests that they were duplicates with the same UIC code.</p>
+<pre class="r"><code>station_list_voyageurs %&gt;% 
+  arrange(libelle_gare) %&gt;% 
+  head()</code></pre>
+<pre><code>## # A tibble: 6 x 17
+##   code_uic libelle_gare fret  voyageurs code_ligne  rang pk    commune
+##   &lt;chr&gt;    &lt;chr&gt;        &lt;chr&gt; &lt;chr&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;  
+## 1 87313759 Abancourt    N     O             325000     2 0+000 Abanco~
+## 2 87313759 Abancourt    N     O             321000     1 50+8~ Abanco~
+## 3 87313759 Abancourt    N     O             325000     1 125+~ Abanco~
+## 4 87481614 Abbaretz     N     O             519000     1 469+~ Abbare~
+## 5 87317362 Abbeville    O     O             289000     1 134+~ &lt;NA&gt;   
+## 6 87317362 Abbeville    O     O             311000     1 175+~ Abbevi~
+## # ... with 9 more variables: departement &lt;chr&gt;, idreseau &lt;dbl&gt;,
+## #   idgaia &lt;chr&gt;, x_lambert93 &lt;dbl&gt;, y_lambert93 &lt;dbl&gt;, x_wgs84 &lt;dbl&gt;,
+## #   y_wgs84 &lt;dbl&gt;, coordonnees_geographiques &lt;chr&gt;,
+## #   CODE_UIC_BETTER_BE_GOOD &lt;chr&gt;</code></pre>
+<p>Obviously, some stations are represented several times. It’s fine, I just need one of them.</p>
+<pre class="r"><code>station_list_voyageurs &lt;- station_list_voyageurs %&gt;% 
+  drop_na(x_lambert93) %&gt;% 
+  drop_na(y_lambert93) %&gt;% 
+  filter(!duplicated(libelle_gare))</code></pre>
+<pre class="r"><code>station_all &lt;- left_join(station_freq,
+                         station_list_voyageurs,
+                         by = c(&quot;code_uic&quot; = &quot;CODE_UIC_BETTER_BE_GOOD&quot;))</code></pre>
+<p>The number of lines remained the same.</p>
+<pre class="r"><code>station_all %&gt;% head()</code></pre>
+<pre><code>## # A tibble: 6 x 24
+##   nom_de_la_gare nb_plate_formes nom_de_la_plate~ code_uic code_postal
+##   &lt;chr&gt;                    &lt;dbl&gt; &lt;chr&gt;            &lt;chr&gt;          &lt;dbl&gt;
+## 1 Les Yvris Noi~               1 Les Yvris Noisy~ 113803         93160
+## 2 Les Rosiers-s~               1 Les Rosiers-sur~ 487876         49350
+## 3 Lézignan-Corb~               1 Lézignan-Corbiè~ 615112         11200
+## 4 Les Versannes                1 Les Versannes    595702         24330
+## 5 Libourne                     1 Libourne         584052         33500
+## 6 Les Tines                    1 Les Tines        746834         74400
+## # ... with 19 more variables: segmentation &lt;chr&gt;,
+## #   total_voyageurs_2017 &lt;dbl&gt;, total_voyageurs_2016 &lt;dbl&gt;,
+## #   code_uic.y &lt;chr&gt;, libelle_gare &lt;chr&gt;, fret &lt;chr&gt;, voyageurs &lt;chr&gt;,
+## #   code_ligne &lt;dbl&gt;, rang &lt;dbl&gt;, pk &lt;chr&gt;, commune &lt;chr&gt;,
+## #   departement &lt;chr&gt;, idreseau &lt;dbl&gt;, idgaia &lt;chr&gt;, x_lambert93 &lt;dbl&gt;,
+## #   y_lambert93 &lt;dbl&gt;, x_wgs84 &lt;dbl&gt;, y_wgs84 &lt;dbl&gt;,
+## #   coordonnees_geographiques &lt;chr&gt;</code></pre>
+<pre class="r"><code>station_all %&gt;% tail()</code></pre>
+<pre><code>## # A tibble: 6 x 24
+##   nom_de_la_gare nb_plate_formes nom_de_la_plate~ code_uic code_postal
+##   &lt;chr&gt;                    &lt;dbl&gt; &lt;chr&gt;            &lt;chr&gt;          &lt;dbl&gt;
+## 1 Walbourg                     1 Walbourg         213405         67360
+## 2 Xeuilley                     1 Xeuilley         141549         54990
+## 3 Wambaix                      1 Wambaix          345595         59400
+## 4 Zetting                      1 Zetting          193649         57115
+## 5 Zu Rhein                     1 Zu Rhein         472639         68200
+## 6 Yvetot                       1 Yvetot           413385         76190
+## # ... with 19 more variables: segmentation &lt;chr&gt;,
+## #   total_voyageurs_2017 &lt;dbl&gt;, total_voyageurs_2016 &lt;dbl&gt;,
+## #   code_uic.y &lt;chr&gt;, libelle_gare &lt;chr&gt;, fret &lt;chr&gt;, voyageurs &lt;chr&gt;,
+## #   code_ligne &lt;dbl&gt;, rang &lt;dbl&gt;, pk &lt;chr&gt;, commune &lt;chr&gt;,
+## #   departement &lt;chr&gt;, idreseau &lt;dbl&gt;, idgaia &lt;chr&gt;, x_lambert93 &lt;dbl&gt;,
+## #   y_lambert93 &lt;dbl&gt;, x_wgs84 &lt;dbl&gt;, y_wgs84 &lt;dbl&gt;,
+## #   coordonnees_geographiques &lt;chr&gt;</code></pre>
+<p>Perfect.</p>
+<p>We check if there are duplicates in the station names. Yes we have.</p>
+<pre class="r"><code>station_all %&gt;% 
+  get_dupes(nom_de_la_gare) %&gt;% view()</code></pre>
+<p>The duplicates don’t seem to be mistakes, but stations with different substations (TGV and TER for example). We will thus add the number of passengers per station. And pick one set of coordinates, arbitrarily, the smallest.</p>
+<pre class="r"><code>station_all &lt;- station_all %&gt;% 
+  group_by(nom_de_la_gare, departement) %&gt;% 
+  summarise(total_voyageurs_2017 = sum(total_voyageurs_2017),
+            x_lambert93 = min(x_lambert93),
+            y_lambert93 = min(y_lambert93))</code></pre>
+</div>
+<div id="at-the-level-of-france" class="section level2">
+<h2>At the level of France</h2>
+<p>First, let’s plot all passenger stations.</p>
+<pre class="r"><code>france +
+  geom_point(data = station_list,
+             aes(x = x_lambert93,
+                 y = y_lambert93),
+             size = 0.1, 
+             colour = &quot;red&quot;, alpha = 0.7) +
+  labs(title = &quot;French passenger train stations&quot;)</code></pre>
+<pre><code>## Warning: Removed 890 rows containing missing values (geom_point).</code></pre>
+<p><img src="/post/2019-03-01-mapping-sncf-stations_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<p>We get a first feel of the distribution of train stations. Mountain areas have lower coverage (Alps in the South east, Pyrennees in the South West, along the Spain border, Corsica.).</p>
+<pre class="r"><code>france +
+  geom_point(data = station_all %&gt;% 
+               filter(total_voyageurs_2017 &gt;  500000),
+             aes(x = x_lambert93,
+                 y = y_lambert93),
+             size = 0.4, 
+             colour = &quot;red&quot;, alpha = 0.7) +
+  labs(title = &quot;French passenger train stations&quot;,
+       subtitle = &quot;Stations with more than 500 000 passengers in 2017&quot;)</code></pre>
+<pre><code>## Warning: Removed 7 rows containing missing values (geom_point).</code></pre>
+<p><img src="/post/2019-03-01-mapping-sncf-stations_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<p>The stations in the Paris region are awefully crowded. The Rhone-Alpes region, as well as allong the Mediterannean region have a decent coverage as well. And we can see what French people call “the empty diagonal”, with a much lower number of inhabitant reflected in this dataset.</p>
+<p>Ok, now we want to add the passenger data on the map. To get a feel of the number max of passengers, let’s sort the file.</p>
+<pre class="r"><code>station_all %&gt;% 
+  select(nom_de_la_gare, total_voyageurs_2017) %&gt;% 
+  filter(total_voyageurs_2017 &gt;  10000000) %&gt;% 
+  arrange(desc(total_voyageurs_2017))</code></pre>
+<pre><code>## # A tibble: 48 x 2
+## # Groups:   nom_de_la_gare [47]
+##    nom_de_la_gare         total_voyageurs_2017
+##    &lt;chr&gt;                                 &lt;dbl&gt;
+##  1 Total                            2591307045
+##  2 Paris Gare du Nord                211771117
+##  3 Paris Saint-Lazare                107875417
+##  4 Paris Gare de Lyon                100560512
+##  5 Paris Montparnasse                 54194496
+##  6 Haussmann Saint-Lazare             44647200
+##  7 Magenta                            41256000
+##  8 Juvisy                             38195637
+##  9 Paris Est                          35411032
+## 10 Lyon Part Dieu                     31884905
+## # ... with 38 more rows</code></pre>
+<p>There was a “Total” line somewhere. Let’s get rid of it.</p>
+<pre class="r"><code>station_all &lt;- filter(station_all, 
+                      nom_de_la_gare != &quot;Total&quot;)</code></pre>
+<pre class="r"><code>france +
+  geom_point(data = station_all %&gt;% 
+               filter(total_voyageurs_2017 &gt;  500000) %&gt;% 
+               arrange(total_voyageurs_2017),
+             aes(x = x_lambert93,
+                 y = y_lambert93,
+                 colour = log(total_voyageurs_2017),
+                 size   = log(total_voyageurs_2017)),
+             alpha = 0.7) +
+  labs(title = &quot;French passenger train stations&quot;,
+       subtitle = &quot;Stations with more than 500 000 passengers in 2017&quot;,
+       x = &quot;&quot;,
+       y = &quot;&quot;,
+       caption = &quot;Source: data.sncf.com&quot;) +
+  scale_color_viridis_c(limits = c(14, 19),
+                        breaks = seq(14, 19, 
+                                     by = 1),
+                        guide = guide_legend(reverse = TRUE),
+                        name = &quot;Log(Nb of passengers)&quot;,
+                        option = &quot;magma&quot;,) +
+  scale_size_continuous(limits = c(14, 19),
+                        breaks = seq(14, 19, 
+                                     by = 1),
+                        guide = guide_legend(reverse = TRUE),
+                        name = &quot;Log(Nb of passengers)&quot;)  +
+  theme_ipsum_rc()</code></pre>
+<pre><code>## Warning: Removed 223 rows containing missing values (geom_point).</code></pre>
+<p><img src="/post/2019-03-01-mapping-sncf-stations_files/figure-html/map1-1.png" width="768" /></p>
+<p>Pretty.</p>
+<pre class="r"><code>france +
+  geom_point(data = station_all %&gt;% 
+               filter(total_voyageurs_2017 &gt; 5000000) %&gt;% 
+               arrange(total_voyageurs_2017),
+             aes(x = x_lambert93,
+                 y = y_lambert93,
+                 colour = log(total_voyageurs_2017),
+                 size   = log(total_voyageurs_2017)),
+             alpha = 0.6) +
+  labs(title = &quot;French passenger train stations&quot;,
+       subtitle = &quot;Stations with more than five millions passengers in 2017&quot;,
+       x = &quot;&quot;,
+       y = &quot;&quot;,
+       caption = &quot;Source: data.sncf.com&quot;) +
+  
+  scale_color_viridis_c(limits = c(14, 19),
+                        breaks = seq(14, 19, 
+                                     by = 1),
+                        option = &quot;magma&quot;,
+                        guide = guide_legend(reverse = TRUE),
+                        name = &quot;Log(Nb of passengers)&quot;) +
+  scale_size_continuous(limits = c(14, 19),
+                        breaks = seq(14, 19, 
+                                     by = 1),
+                        guide = guide_legend(reverse = TRUE),
+                        name = &quot;Log(Nb of passengers)&quot;) +
+  theme_ipsum_rc()</code></pre>
+<pre><code>## Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
+<p><img src="/post/2019-03-01-mapping-sncf-stations_files/figure-html/map2-1.png" width="768" /></p>
+<p>Without the size dependance of points.</p>
+<pre class="r"><code>france +
+  geom_point(data = station_all %&gt;% 
+               filter(total_voyageurs_2017 &gt; 5000000) %&gt;% 
+               arrange(total_voyageurs_2017),
+             
+             aes(x = x_lambert93,
+                 y = y_lambert93,
+                 colour = log(total_voyageurs_2017)),
+             
+             alpha = 0.5) +
+  
+  labs(title = &quot;French passenger train stations&quot;,
+       subtitle = &quot;Stations with more than five millions passengers in 2017&quot;,
+       x = &quot;&quot;,
+       y = &quot;&quot;,
+       caption = &quot;Source: data.sncf.com&quot;) +
+  
+scale_color_viridis_c(option = &quot;magma&quot;,
+                      guide = guide_legend(reverse = TRUE),
+                      name = &quot;Log(Nb of passengers)&quot;)</code></pre>
+<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
+<p><img src="/post/2019-03-01-mapping-sncf-stations_files/figure-html/map3-1.png" width="768" /></p>
+<p>The Paris region has very, very high numbers of passengers per year. For the rest, we see the big towns.</p>
+</div>
+<div id="paris-region-ile-de-france" class="section level2">
+<h2>Paris region (Ile-de-France)</h2>
+<pre class="r"><code>ile_de_france &lt;- departements_L93 %&gt;% 
+  filter(NOM_REG == &quot;ILE-DE-FRANCE&quot;)</code></pre>
+<pre class="r"><code>idf &lt;- ggplot(ile_de_france) +
+  scale_fill_viridis_d() +
+  geom_sf() +
+  coord_sf(crs = 2154, datum = sf::st_crs(2154)) +
+  guides(fill = FALSE)
+
+idf</code></pre>
+<p><img src="/post/2019-03-01-mapping-sncf-stations_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+<pre class="r"><code>stations_idf &lt;- station_all %&gt;% 
+  filter(departement %in% c(&quot;Seine-St-Denis&quot;, &quot;Paris&quot;, &quot;Essone&quot;, &quot;Yvelines&quot;, &quot;Val-d&#39;Oise&quot;, &quot;Hauts-de-Seine&quot;, &quot;Val-de-Marne&quot;, &quot;Seine-et-Marne&quot;))</code></pre>
+<pre class="r"><code>idf +
+  geom_point(data = stations_idf %&gt;%  
+               arrange(total_voyageurs_2017),
+             aes(x = x_lambert93,
+                 y = y_lambert93,
+                 colour = log(total_voyageurs_2017),
+                 size   = log(total_voyageurs_2017)),
+             alpha = 0.7) +
+  
+   labs(title = &quot;French train stations around Paris&quot;,
+       subtitle = &quot;Ile de France Region (Paris) - 2017&quot;,
+       x = &quot;&quot;,
+       y = &quot;&quot;,
+       caption = &quot;Source: data.sncf.com&quot;) +
+  
+  scale_color_viridis_c(limits = c(10, 18),
+                        breaks = seq(10, 18, 
+                                     by = 1),
+                        option = &quot;magma&quot;,
+                        guide = guide_legend(reverse = TRUE),
+                        name = &quot;Log(Nb of passengers)&quot;) +
+  scale_size_continuous(limits = c(10, 18),
+                        breaks = seq(10, 18, 
+                                     by = 1),
+                        guide = guide_legend(reverse = TRUE),
+                        name = &quot;Log(Nb of passengers)&quot;) +
+  theme_ipsum_rc()</code></pre>
+<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
+<p><img src="/post/2019-03-01-mapping-sncf-stations_files/figure-html/map4-1.png" width="672" /></p>
+<p>We can see the lines leaving Paris for the surrounding areas.</p>
+<p>And that is all for today.</p>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>(I think that UIC stands for Union Inter des Chemins de fer)<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>Like write two or three papers, apply for jobs, enjoy South of France amazing spring and plot network of evolutionary scientists as measured through PhD comittees, you know, the fun things in life<a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>That is a reference only French people can understand I am afraid<a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p>why are these not in the station reference list, we shall never know<a href="#fnref4">↩</a></p></li>
+</ol>
+</div>

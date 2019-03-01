@@ -215,7 +215,7 @@ ggplot(data = feder_total,
   labs(title = "Total R&D budget per agency, 1976-2018",
        y = "R&D budget (billion $)",
        x = "Federal agency",
-       subtitle = "Total invesments in the past 40 years have been huge in defence, and moderate in health",
+       subtitle = "Total invesments in the past 40 years have been huge in defence, and\nmoderate in health",
        caption = "Source data: American Association for the Advancement of Science\nInflation adjusted dollars") +
   theme_ipsum_tw()
 ```
