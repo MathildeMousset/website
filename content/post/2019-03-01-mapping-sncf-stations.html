@@ -20,9 +20,9 @@ editor_options:
 <div id="TOC">
 <ul>
 <li><a href="#part-1-on-the-path-to-the-dirty-data-hell-circles">Part 1: on the path to the dirty data hell circles</a><ul>
-<li><a href="#outer-circle-stations">Outer circle: stations</a></li>
-<li><a href="#second-inner-circle-joining">Second inner circle: joining</a></li>
-<li><a href="#first-inner-circle-fuzzyjoining">First inner circle: fuzzyjoining</a></li>
+<li><a href="#outer-hell-circle-stations">Outer hell circle: stations</a></li>
+<li><a href="#second-hell-inner-circle-joining">Second hell inner circle: joining</a></li>
+<li><a href="#first-hell-inner-circle-fuzzyjoining">First hell inner circle: fuzzyjoining</a></li>
 <li><a href="#closing-thoughts-on-that-hell">Closing thoughts on that hell</a></li>
 </ul></li>
 <li><a href="#sncf-mapping-the-retour">SNCF mapping, the retour!</a><ul>
@@ -39,14 +39,14 @@ editor_options:
 <center>
 <img src="https://media.giphy.com/media/3oKIPd0cPwxKl2zbPi/giphy.gif" />
 </center>
-<p>Anyway, originally, when I donwloaded the files from SNCF website for the first time, my aim was to map stations and plot their delays. However, things did not go as planned. This is what I wrote in the last post.</p>
+<p>Originally, when I donwloaded the files from SNCF website for the first time, my aim was to map stations and plot their delays. However, things did not go as planned. This is what I wrote in the last post.</p>
 <blockquote>
 <blockquote>
 <p>Originally, for this post, I wanted to map the data on a French map, but I encountered a bit of trouble in getting the GPS coordinates of the stations, and I am still perfecting my fuzzyjoining. This might be a story for later, including the crushing of my cute naivety concerning name harmonizing in datasets made available within the same company.</p>
 </blockquote>
 </blockquote>
 <p>Today is the story of my crushed naivety, in the <strong>Part 1</strong>. Be ready for complaining, frustration, and no fairy-tale ending. I am mostly documenting it as a double reminder to myself: <em>i</em>) how to do fuzzyjoining and <em>ii</em>) why consistency in names is important, and ID columns should not be messed with!</p>
-<p>I however won’t admit defeat that easily. I am a scientist, and I have spent months counting thousands of seeds, one month figuring out the perfect timing for pollinating a small <em>Brassicaceae</em> that you never heard of (it’s a cool plant, though), weeks weighing plant bits and dissecting pollen anthesis under the binaucular. You don’t get me to quit that easily.</p>
+<p>I however won’t admit defeat that easily. I am a scientist, and I have spent months counting thousands of seeds, one month figuring out the perfect timing for pollinating a small <em>Brassicaceae</em> that you never heard of (it’s a cool plant, though), weeks weighing plant bits and dissecting pollen anthesis under the binoccular. You don’t get me to quit that easily.</p>
 <p>One day, in the middle of the night, I remembered that I saw the number of people going through stations <em>somewhere</em>. I decided to have another go at mapping SNCF stations. This is the <strong>Part 2</strong>. Nothing too fancy, but we get to make some maps, eventually!</p>
 <div id="part-1-on-the-path-to-the-dirty-data-hell-circles" class="section level1">
 <h1>Part 1: on the path to the dirty data hell circles</h1>
@@ -121,8 +121,8 @@ tgv &lt;- read_delim(&quot;2019-02-08-regularite-mensuelle-tgv-aqst.csv&quot;,
 ## )
 ## See spec(...) for full column specifications.</code></pre>
 <p>These data are from the Open Data from the SNCF website, and you can also find them on the #Tidytuesday website.</p>
-<div id="outer-circle-stations" class="section level2">
-<h2>Outer circle: stations</h2>
+<div id="outer-hell-circle-stations" class="section level2">
+<h2>Outer hell circle: stations</h2>
 <p>So here are the train stations in the dataset:</p>
 <pre class="r"><code>tgv$arrival_station %&gt;% unique()</code></pre>
 <pre><code>##  [1] &quot;METZ&quot;                           &quot;PARIS EST&quot;                     
@@ -156,14 +156,14 @@ tgv &lt;- read_delim(&quot;2019-02-08-regularite-mensuelle-tgv-aqst.csv&quot;,
 ## [57] &quot;PARIS VAUGIRARD&quot;                &quot;MARNE LA VALLEE&quot;               
 ## [59] &quot;MADRID&quot;</code></pre>
 <p>There is a mix of French and European stations. I would like to plot them on a map of Europe, so I need to fetch their GPS coordinates.</p>
-<p>I found a <a href="%22https://public.opendatasoft.com/explore/dataset/european-train-stations/information/%22">datafile</a> from <a href="%22https://www.trainline.fr/%22">Trainline</a>, a train travel agent with the location of all the stations that are in their database. As they sell french train tickets, the stations in the SNCF dataset should be referenced in their database. I <em>just</em> have to join them.</p>
+<p>I found a <a href="%22https://public.opendatasoft.com/explore/dataset/european-train-stations/information/%22">data file</a> from <a href="%22https://www.trainline.fr/%22">Trainline</a>, a train travel agent, with the location of all the stations that are in their database. As they sell french train tickets, the stations in the SNCF dataset should be referenced in their database. I <em>just</em> have to join them.</p>
 <p>Some text cleaning first: I use the <code>str_to_title()</code> function from <code>stringr</code> to change all caps to title caps.</p>
 <pre class="r"><code>tgv &lt;- tgv %&gt;% 
   mutate(arrival_station = str_to_title(arrival_station),
          departure_station = str_to_title(departure_station))</code></pre>
 </div>
-<div id="second-inner-circle-joining" class="section level2">
-<h2>Second inner circle: joining</h2>
+<div id="second-hell-inner-circle-joining" class="section level2">
+<h2>Second hell inner circle: joining</h2>
 <p>Ok, let’s see which stations will not get coordinates.</p>
 <pre class="r"><code>anti_join(tgv, european_stations, by = c(&quot;arrival_station&quot; = &quot;name&quot;)) %&gt;% nrow()</code></pre>
 <pre><code>## [1] 3046</code></pre>
@@ -202,7 +202,7 @@ tgv &lt;- read_delim(&quot;2019-02-08-regularite-mensuelle-tgv-aqst.csv&quot;,
 <center>
 <img src="https://media.giphy.com/media/xUOxeRVBTkYT2yOC5y/giphy.gif" />
 </center>
-<p>This sucks. <em>Time for Plan B.</em></p>
+<p><em>Time for Plan B.</em></p>
 <p>I can see that the trainline file has <code>uic</code>, <code>uic8_sncf</code> and <code>sncf_id</code> columns. Which means that somewhere in the SNCF 300 open datasets, there <em>must be</em> a list of stations with their UIC<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> code and/or some SNCF ID. It has to!</p>
 <p>Some internet searching later…</p>
 <p>There is a file that seems to be the station database of <a href="%22https://data.sncf.com/explore/dataset/referentiel-gares-voyageurs/information/?sort=-intitule_gare%22">SNCF</a>. With all the crunchy little details such as the town, the department, the name of the station as it is written on the building, the number of platforms and, conveniently, longitude and latitude.</p>
@@ -238,12 +238,9 @@ tgv &lt;- read_delim(&quot;2019-02-08-regularite-mensuelle-tgv-aqst.csv&quot;,
 <img src="https://media.giphy.com/media/kSA7u0tUziLXq/giphy.gif" />
 </center>
 <p>Plan C: time to use some fuzzy joining, then.</p>
-<center>
-<img src="https://media.giphy.com/media/3o8doT5DaMjfH3paHC/giphy.gif" />
-</center>
 </div>
-<div id="first-inner-circle-fuzzyjoining" class="section level2">
-<h2>First inner circle: fuzzyjoining</h2>
+<div id="first-hell-inner-circle-fuzzyjoining" class="section level2">
+<h2>First hell inner circle: fuzzyjoining</h2>
 <p>I have to be honest, I never tried fuzzy-joining anything before. I just read the name somewhere on Stackoverflow one day, and filled it for later use. Thank you brain.</p>
 <p>The <code>fuzzyjoin</code> <a href="%22https://github.com/dgrtwo/fuzzyjoin%22">package</a> is written by David Robinson and it helps joining columns where the text is not exaclty the same, that is, inexact matching.</p>
 <p>I believe that it is more targeted at text where there are some mistakes and small variations. Some of the names here differ by two words or more, so I was not completely sure of what would happen.</p>
@@ -270,7 +267,10 @@ tgv &lt;- read_delim(&quot;2019-02-08-regularite-mensuelle-tgv-aqst.csv&quot;,
   unique() %&gt;% 
   mutate(departure_station = str_replace(departure_station, &quot; St &quot;, &quot; Saint &quot;),
          departure_station = str_replace(departure_station, &quot;St &quot;, &quot;Saint &quot;))</code></pre>
-<p>And let’s gooo !</p>
+<p>And let’s go!</p>
+<center>
+<img src="https://media.giphy.com/media/3o8doT5DaMjfH3paHC/giphy.gif" />
+</center>
 <pre class="r"><code>fuzzy_left_join(essai_tgv,
                 essai_gare,
                 by = c(&quot;departure_station&quot; = &quot;UT&quot;),
@@ -339,7 +339,7 @@ tgv &lt;- read_delim(&quot;2019-02-08-regularite-mensuelle-tgv-aqst.csv&quot;,
 ## # ... with 14 more rows</code></pre>
 <p>24 non matched lines and many wrong matches. There are probably ways to tweak the distance parameter to decrease these false positive, but I figured the other function is better suited.</p>
 <p>Except that then I spent a couple of more hours trying to get the fuzzyjoin to go further and I did not manage. I tried the other promising column too, to no end.</p>
-<p>At some point, I decided that I had lost enough of my life attempting to join SNCF files, and that I should move on. I forbade myslef to touch this script ever again, except to turn it into a bitter rant about the inegal quality of data on the internet.</p>
+<p>At some point, I decided that I had lost enough hours of my life attempting to join SNCF files, and that I should move on. I forbade myslef to touch this script ever again, except to turn it into a bitter rant about the messy data on the internet.</p>
 <p>I now felt less lonely in this failure when I read that many people renounced joining the files during the #Tidytuesday challenge. I would be happy to know who managed, and how.</p>
 </div>
 <div id="closing-thoughts-on-that-hell" class="section level2">
@@ -372,7 +372,7 @@ library(sf)</code></pre>
 <pre><code>## Warning: le package &#39;leaflet&#39; a été compilé avec la version R 3.5.2</code></pre>
 <pre class="r"><code>library(ggrepel)</code></pre>
 <pre><code>## Warning: le package &#39;ggrepel&#39; a été compilé avec la version R 3.5.2</code></pre>
-<p>I found a “station list” file, which is <em>not</em> the “reference list of station” file that we have attempted to put to use before. It countains the Lambert coordinates of all stations, so that’s sweet<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. We will let the station reference file sulk on its own in the directory forever, and use the station list file from now on.</p>
+<p>I found a “station list” file, which is <em>not</em> the “reference list of stations” file that we have attempted to put to use before. It countains the Lambert coordinates of all stations, so that’s sweet<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. We will let the station reference file sulk on its own in the directory forever, and use the station list file from now on.</p>
 <p>For the mapping, I will heavily rely on the advice from <a href="%22https://statnmap.com/2018-07-14-introduction-to-mapping-with-sf-and-co/%22">Sebastien Rochette</a>.</p>
 <p>We will use the <code>sf</code> package (for simple features), whose syntax is inspired from PostGIS. It is a relatively new package in R, but it is quite powerfull and quite handy. It enable us to manipulate <code>sf</code> objects as dataframes and to perform the usual operations on them (mutate, filter etc.).</p>
 <div id="import-the-data" class="section level2">
@@ -751,6 +751,6 @@ idf</code></pre>
 <li id="fn1"><p>(I think that UIC stands for Union Inter des Chemins de fer)<a href="#fnref1">↩</a></p></li>
 <li id="fn2"><p>Like write two or three papers, apply for jobs, enjoy South of France amazing spring and plot network of evolutionary scientists as measured through PhD comittees, you know, the fun things in life<a href="#fnref2">↩</a></p></li>
 <li id="fn3"><p>That is a reference only French people can understand I am afraid<a href="#fnref3">↩</a></p></li>
-<li id="fn4"><p>why are these not in the station reference list, we shall never know<a href="#fnref4">↩</a></p></li>
+<li id="fn4"><p>Why are these not in the station reference list, we shall never know<a href="#fnref4">↩</a></p></li>
 </ol>
 </div>
