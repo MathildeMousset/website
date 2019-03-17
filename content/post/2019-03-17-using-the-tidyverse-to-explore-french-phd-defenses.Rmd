@@ -25,6 +25,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
 library(gganimate)
+library(knitr)
 ```
 
 ```{r my_theme, echo=FALSE}
@@ -110,14 +111,6 @@ thesis_clean <- thesis2 %>%
   filter(!str_detect(author, pattern = ",")) %>% 
   select(-thesis_advisor2) %>% 
   mutate(advisors = str_split(thesis_advisor1, ","))
-
-
-
-# Get months in English
-thesis_clean$month_english = factor(thesis_clean$month_defense,
-                                    ordered = TRUE)
-
-levels(thesis_clean$month_english) <- c("January", "February", "March", "April", "May", "June", "July", "August", "September",  "October", "November", "December")
 ```
 
 
@@ -415,7 +408,7 @@ Explore this
 
 ```{r}
 thesis_evology %>% 
-  count(discipline, sort = TRUE) %>% View
+  count(discipline, sort = TRUE) %>% kable()
 ```
 
 

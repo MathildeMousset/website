@@ -3,6 +3,7 @@ title: Using the Tidyverse to explore French PhD defenses
 author: Mathilde Mousset
 date: '2019-03-17'
 slug: using-the-tidyverse-to-explore-french-phd-defenses
+draft: true
 categories:
   - R
 tags:
@@ -43,15 +44,7 @@ editor_options:
   filter(!duplicated(thesis_id)) %&gt;% 
   filter(!str_detect(author, pattern = &quot;,&quot;)) %&gt;% 
   select(-thesis_advisor2) %&gt;% 
-  mutate(advisors = str_split(thesis_advisor1, &quot;,&quot;))
-
-
-
-# Get months in English
-thesis_clean$month_english = factor(thesis_clean$month_defense,
-                                    ordered = TRUE)
-
-levels(thesis_clean$month_english) &lt;- c(&quot;January&quot;, &quot;February&quot;, &quot;March&quot;, &quot;April&quot;, &quot;May&quot;, &quot;June&quot;, &quot;July&quot;, &quot;August&quot;, &quot;September&quot;,  &quot;October&quot;, &quot;November&quot;, &quot;December&quot;)</code></pre>
+  mutate(advisors = str_split(thesis_advisor1, &quot;,&quot;))</code></pre>
 </div>
 <div id="some-general-numbers" class="section level1">
 <h1>Some general numbers</h1>
@@ -5293,14 +5286,7 @@ animate(p,
 ## 3         2010       janvier    vendredi   Nicolas Ris, Laurent Lapchin
 ## 4         2010       janvier    vendredi                Daniel Gerdeaux
 ## 5         2010       janvier    vendredi            Vincent Bretagnolle
-## 6         2010       janvier    vendredi   Sebastien Barot, Luc Abbadie
-##   month_english
-## 1       January
-## 2       January
-## 3       January
-## 4       January
-## 5       January
-## 6       January</code></pre>
+## 6         2010       janvier    vendredi   Sebastien Barot, Luc Abbadie</code></pre>
 <p>Since the first of january</p>
 <pre class="r"><code>thesis_evology %&gt;% 
   filter(year_defense &gt;= 2010) %&gt;% 
