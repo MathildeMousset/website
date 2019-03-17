@@ -14,6 +14,7 @@ tags:
 output:
   blogdown::html_page:
     toc: yes
+    toc_depth: 3
 editor_options: 
   chunk_output_type: console
 ---
@@ -32,19 +33,22 @@ library(knitr)
 library(igraph)
 library(ggraph)
 library(ggrepel)
+
+# Load data
+thesis <- read_csv2("2019-03-05-thesis.csv")
 ```
 
 # Introduction
 
-Some time ago, I donwloaded the summary of all PhD thesis defended in France from 1986 and 2018, as they appear in the national database [these.fr]("these.fr"). One of the national database, at least^[I heard that the file has a slighly different number of lines than the file downloaded from HAL, another national archive, but I cannot find the discussion again].
+Some months ago, I donwloaded the summary file of all PhD theses defended in France from 1986 to 2018, as they appear in the national database [these.fr]("these.fr"). One of the national database, at least^[I heard that the file has a slighly different number of lines than the file downloaded from HAL, another national archive, but I cannot find the discussion again].
 
-It is a big file, with 369554 lines (at the date I downloaded it), and there are many things to investigate with it. Today I will focus on a network analysis, inspired by the great posts of [Baptiste Coulmont]("coulmont.com/blog/2018/12/02/sociologue-reseau-theses-2018/") and [Olivier Gimenez]("https://oliviergimenez.github.io/post/network_ecology/"), who respectively conducted such an analysis in social sciences and ecology. Being an evolutionnary biologist, I could not wait to perform one in evolution!
+It is a big file, with `r nrow(thesis)` lines (at the date I downloaded it), and there are many things to investigate with it. Today I focus on a network analysis, inspired by the great posts of [Baptiste Coulmont]("coulmont.com/blog/2018/12/02/sociologue-reseau-theses-2018/") and [Olivier Gimenez]("https://oliviergimenez.github.io/post/network_ecology/"), who respectively conducted such an analysis in social sciences and ecology. Being an evolutionnary biologist, I *had to* do one in evolution.
 
 I modified the code from Olivier Gimenez to apply it to French evolutionary biologists. Or rather, evolutionary biologists that are involved in supervising and evaluating PhDs (a process which also involves non-French scientists).
 
 # Getting all the data
-## Get PhD data
 
+## Get PhD data
 
 I downloaded and cleaned the whole file from [theses.fr]("theses.fr") using the following commands. Beware, it takes some time.
 
@@ -110,21 +114,16 @@ write.table(thesis2,
 
 
 
-```{r load_data, echo=FALSE}
-# Load data
-thesis <- read_csv2("2019-03-05-thesis.csv")
-```
-
 
 ## Get evolution-related PhD
 
-I want the PhDs that were in the evolutionary field. It is a bit tricky because the field name (`discipline` in the dataframe) depends on doctoral schools, and changes every couple of years within doctoral schools.
+I want the PhDs from the evolutionary field. It is a bit tricky because the field name (`discipline` in the dataframe) depends on doctoral schools, and changes every couple of years within doctoral schools.
 
-I first tried filtering by discipline names that contain variation on the word evolution ("Évolut|Evolut|evolut|évolut|") using the `str_detect()` function from the excellent `stringr` package.
+I first filtered by discipline names that contain variation on the word evolution ("Évolut|Evolut|evolut|évolut|") using the `str_detect()` function from the excellent `stringr` package.
 
-I obtained a couple of fields that have nothing to do with evolutionary biology. For example, "evolution of terrestrial systems". Fortunately, the list of fields was not so long, so I could check it and manually filter out the fields that really do not belong (mostly from geology and earth sciences).
+I obtained a couple of fields that have nothing to do with evolutionary biology. For example, "evolution of terrestrial systems". Fortunately, the list of fields was not so long, so I could check it and manually filter out fields that really did not belong (mostly from geology and earth sciences).
 
-We can see that there are fields that include evolution but are much larger, such as "biological sciences and evolution", but I don't think much can be done about it.
+We can see that there are fields which include evolution but are much larger, such as "biological sciences and evolution", but I don't think much can be done about it.
 
 Then I noticed that I had very few PhDs from before 2000, so I spent a couple of minutes searching for the PIs in my lab, and got some more fields to add. I am sure that we are missing some people^[I know of at least one, but the field is "biology", and really, it's too wide!], but I think we got the bulk of evolutionary biology PhDs.
 
@@ -491,3 +490,14 @@ graphe_3 <- make_network_full(scrapped_Montpellier,
 
 ![](/images/2019-03-05-evolution_Montpellier.png)
 
+
+<p class="terms">
+  {{ range $i := (slice "categories" "tags") }}
+  {{ with ($.Param $i) }}
+  {{ $i | title }}:
+  {{ range $k := . }}
+  <a href='{{ relURL (print "/" $i "/" $k | urlize) }}'>{{$k}}</a>
+  {{ end }}
+  {{ end }}
+  {{ end }}
+</p>

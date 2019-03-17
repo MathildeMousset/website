@@ -5,3 +5,5 @@
 blogdown
 public/
 Thumbs.db
+content/post/2019-03-05-thesis.csv
+content/post/2019-03-17-thesis.RData
