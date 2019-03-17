@@ -3,7 +3,8 @@ title: Exploration of French Academic Network in Evolution
 author: Mathilde Mousset
 date: '2019-03-05'
 slug: exploration-f-french-academic-network-in-evolution
-categories: []
+categories:
+  - R
 tags:
   - data visualisation
   - data analysis
@@ -406,6 +407,9 @@ V(g)$label &lt;- ifelse(V(g)$degres &lt; 9,
 <img src="/images/2019-03-05-evolution_Montpellier.png" />
 
 </div>
+<p class="terms">
+{{ range <span class="math inline">\(i := (slice &quot;categories&quot; &quot;tags&quot;) }}  {{ with (\)</span>.Param $i) }} {{ $i | title }}: {{ range $k := . }} <a href='{{ relURL (print "/" $i "/" $k | urlize) }}'>{{$k}}</a> {{ end }} {{ end }} {{ end }}
+</p>
 </div>
 <div class="footnotes">
 <hr />

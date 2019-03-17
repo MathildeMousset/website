@@ -3,7 +3,8 @@ title: Exploration of French Academic Network in Evolution
 author: Mathilde Mousset
 date: '2019-03-05'
 slug: exploration-f-french-academic-network-in-evolution
-categories: []
+categories:
+  - R
 tags:
   - data visualisation
   - data analysis
