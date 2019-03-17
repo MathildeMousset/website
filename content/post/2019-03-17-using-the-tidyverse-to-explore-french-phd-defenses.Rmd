@@ -1,0 +1,554 @@
+---
+title: Using the Tidyverse to explore French PhD defenses
+author: Mathilde Mousset
+date: '2019-03-17'
+slug: using-the-tidyverse-to-explore-french-phd-defenses
+categories:
+  - R
+tags:
+  - data visualisation
+  - R
+  - PhD
+output:
+  blogdown::html_page:
+    toc: yes
+    toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+
+---
+title: "theses.fr"
+author: "Mathilde Mousset"
+date: "14 décembre 2018"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(gganimate)
+```
+
+```{r my_theme, echo=FALSE}
+plot_background_colour <- "#C2B3B4"
+strip_background_colour <- "#C2B3B4"
+grid_colour <- "#C2B3B4"
+
+text_colour  <- "#3D1A1C"
+title_colour <- "#3D1A1C"
+axis_colour  <- "#3D1A1C"
+
+bar_col <- "#92070E"
+
+my_theme <- theme(
+    # Text in general
+    text = element_text(family = "Roboto Condensed",
+                        colour = text_colour),
+    
+    # Title, subtitle, caption
+    plot.title    = element_text(size = 16,
+                                 lineheight = 1.6,
+                                 face = "bold",
+                                 colour = title_colour),
+    plot.subtitle = element_text(size = 14,
+                                 lineheight = 1),
+    plot.caption  = element_text(size = 14),
+    
+    # Facet
+    strip.background = element_rect(fill = strip_background_colour),
+    strip.text = element_text(size = 12,
+                              face = "bold"),
+
+    
+    # Axes
+    axis.text  = element_text(size = 12),
+    #axis.text.x = element_text(vjust = 1),
+    #axis.text.y = element_text(hjust = 1),
+    
+    axis.title = element_text(size = 14,
+                              face = "bold"),
+    axis.line  = element_line(size = 0.5,
+                              colour = axis_colour),
+
+    # Legend
+    legend.title = element_text(size = 12, 
+                                face = "bold"), 
+    legend.text = element_text(size = 12),
+    legend.background = element_rect(fill = plot_background_colour),
+    
+    # Background
+    panel.background = element_rect(fill = plot_background_colour),
+    plot.background  = element_rect(fill = plot_background_colour),
+    
+    panel.grid.major = element_line(colour = grid_colour,
+                                    size = 0.2,
+                                    linetype = "dashed"),
+    panel.grid.minor = element_line(colour = grid_colour, 
+                                    size = 0.2, 
+                                    linetype = "dashed"),
+    panel.border = element_blank())
+```
+
+
+# General information
+
+I downloaded all thesis defended in France and recorded on the <these.fr>[these.fr] datatabase on the 14 December 2018. This datafile does not take into account thesis that were never defended, or are still under completion to this date.
+
+I first did some benign cleaning (remove non data lines, repeated headers, convert dates into universal format etc.) and saved the clean data.
+
+
+```{r load_data}
+load("./2_clean_data/thesis.RData")
+```
+
+
+There are PhDs with several authors, separated by commas. I filter them out.
+Then, we fix the advisor columns. Right now, the advisor 1 is XY and the advisor 2 is YX. When there are two (or more) advisors, their names are in the same column, separated by a comma.
+
+
+```{r}
+thesis_clean <- thesis2 %>% 
+  filter(!duplicated(thesis_id)) %>% 
+  filter(!str_detect(author, pattern = ",")) %>% 
+  select(-thesis_advisor2) %>% 
+  mutate(advisors = str_split(thesis_advisor1, ","))
+
+
+
+# Get months in English
+thesis_clean$month_english = factor(thesis_clean$month_defense,
+                                    ordered = TRUE)
+
+levels(thesis_clean$month_english) <- c("January", "February", "March", "April", "May", "June", "July", "August", "September",  "October", "November", "December")
+```
+
+
+
+# Some general numbers
+
+The number of thesis defended in France has decreased around the 2000, but rose again to similar level as before in the past decade.
+
+```{r}
+thesis_clean %>% 
+  ggplot(aes(x = year_defense)) +
+  geom_histogram(binwidth = 1,
+                 fill = bar_col) +
+  labs(title = "Number of PhD defended in France since 1986",
+       subtitle = "Why is there such a gap in the 2000 ?",
+       caption = "Source: theses.fr",
+       x = "Year of PhD defense",
+       y = "Number of thesis") +
+  my_theme
+```
+
+
+Most PhDs have one or two supervisors. A couple have more.
+
+```{r}
+thesis_clean %>% 
+  mutate(n_authors = lengths(advisors)) %>%
+  count(n_authors) %>% 
+  mutate(proportion = 100 * n / sum(n))
+```
+
+
+There are about 2500 persons with two PhDs (based on author ID), whith is probably correct. Whether the people with four to six PhD represent a problem in author ID attribution, real PhDs, or crackpots who managed to get a varnish of science is hard to tell. 
+
+```{r}
+thesis_clean %>% 
+  # Remove authors with no ID
+  drop_na(author_id) %>% 
+  filter(author_id != ",",
+         !author_id == "") %>% 
+  
+  count(author_id, sort = TRUE) %>% 
+  filter(n > 1) %>% 
+  
+  ggplot(aes(x = n)) +
+  geom_histogram(binwidth = 1,
+                 fill = bar_col) +
+  coord_flip() +
+  labs(title = "People with more than one PhD",
+       subtitle = "Some people hold more than three PhDs... O_O",
+       x = "Number of PhDs",
+       y = "Number of people",
+       caption = "Source: theses.fr") +
+  scale_y_continuous(breaks = seq(0, 3000, 200)) +
+  my_theme
+```
+
+
+# Number of thesis per supervisor
+
+While most people supervised or helped supervise a dozen of PhDs, a decent number of people supervised more than 20 PhDs, which I think as an awesome lot. In France, this is likely to depend on the field. In science doctoral schooln the number of PhD that a PI can supervise at any given time can be limited. I believe that it is a different culture in the humanities.
+
+
+```{r}
+thesis_clean %>% 
+  drop_na(thesis_advisors_id) %>% 
+  filter(!thesis_advisors_id == ",") %>% 
+  separate_rows(thesis_advisors_id, sep = ",") %>% 
+  drop_na(thesis_advisors_id) %>% 
+  
+  group_by(thesis_advisors_id) %>% 
+  count(thesis_advisors_id, sort = TRUE) %>% 
+  filter(n < 500) %>% 
+  
+  ggplot(aes(x = n)) +
+  geom_histogram(binwidth = 0.1,
+                 fill = bar_col) +
+  coord_flip() +
+   scale_x_continuous(trans = "log10") +
+     scale_y_continuous(trans = "log10") +
+  labs(title = "Number of PhD supervised by advisor",
+       subtitle = "Log10 scale",
+       x = "Number of PhDs per (co-)advisor",
+       y = "Number of advisors",
+       caption = "Source: theses.fr") +
+  my_theme
+```
+
+
+# When are PhD defended?
+
+```{r}
+thesis_clean %>% 
+  filter(year_defense >= 1990) %>% 
+    filter(year_defense < 2018) %>% 
+  group_by(year_defense) %>% 
+  
+  ggplot(aes(x = year_defense)) +
+  geom_histogram(binwidth = 1,
+                 fill = bar_col) +
+  labs(title = "Number of PhD defended in France",
+       subtitle = "From 1990 to 2017",
+       x = "Year of PhD defense",
+       y = "Number of PhD",
+       caption = "Source: theses.fr") +
+  my_theme
+```
+
+
+
+
+
+
+```{r}
+thesis_clean %>% 
+  filter(year_defense >= 2010) %>% 
+    filter(year_defense < 2018) %>% 
+  mutate(day_defense2 = day(date_defense)) %>% 
+  group_by(year_defense,
+           month_defense,
+           day_defense2) %>% 
+  count() %>% 
+  
+  ggplot(aes(x = month_defense, 
+             y = day_defense2, 
+             fill = n)) +
+  facet_wrap(~year_defense, ncol = 8) +
+  geom_tile() +
+  
+  labs(title = "Distribution of PhD defense over time",
+       subtitle = "",
+       x = "Day of the week",
+       y = "Defense month") +
+  # scale_fill_gradientn(colours = wes_palette("Zissou1", 
+  #                                            100,
+  #                                            type = "continuous")) +
+  
+  scale_fill_gradient(high = bar_col, 
+                      low = title_colour) +
+  
+  my_theme +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.3))
+```
+
+Since the first of january  :
+
+```{r}
+thesis_clean %>% 
+  filter(year_defense >= 2010) %>% 
+    filter(year_defense < 2018) %>% 
+    mutate(day_defense2 = day(date_defense)) %>% 
+  filter(day_defense2 > 1) %>% 
+  group_by(year_defense,
+           month_defense,
+           day_defense2) %>% 
+  count() %>% 
+  ggplot(aes(x = month_defense, 
+             y = day_defense2, 
+             fill = n)) +
+  facet_wrap(~year_defense, ncol = 8) +
+  geom_tile() +
+  
+  labs(title = "Distribution of PhD defense over time",
+       subtitle = "",
+       x = "Day of the week",
+       y = "Defense month") +
+  scale_fill_gradient(high = bar_col, 
+                      low = title_colour) +
+  my_theme +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.3))
+```
+
+```{r}
+thesis_clean %>% 
+  filter(year_defense >= 2010) %>% 
+    filter(year_defense < 2018) %>% 
+  mutate(day_defense2 = day(date_defense)) %>% 
+  filter(day_defense2 > 1) %>% 
+  group_by(year_defense,
+           month_defense,
+           day_defense) %>% 
+  count() %>% 
+  ggplot(aes(x = day_defense, 
+             y = month_defense, 
+             fill = n)) +
+  facet_wrap(~year_defense, ncol = 8) +
+  geom_tile() +
+  
+  labs(title = "Distribution of PhD defense over time",
+       subtitle = "",
+       x = "Day of the week",
+       y = "Defense month") +
+  
+    scale_fill_gradient(high = bar_col, 
+                      low = title_colour) +
+ my_theme +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.3))
+```
+
+
+
+```{r}
+thesis_clean %>% 
+  filter(year_defense >= 2015,
+         year_defense < 2018) %>% 
+    mutate(year_month = format(as.Date(date_defense),
+                              "%Y-%m")) %>% 
+  group_by(year_defense, month_defense, year_month) %>% 
+  count() %>% 
+  ggplot(aes(x = month_defense,
+             y = n,
+             group = year_defense)) +
+  geom_line(colour = bar_col,
+            size = 2,
+            alpha = 0.7) +
+  annotate("text",
+           x = "août",
+                y = 2000,
+                label = "Summer holidays",
+                size = 5,
+                colour = title_colour) +
+  annotate("segment", 
+           x = "août", 
+           xend = "août", 
+           y = 1800, 
+           yend = 800, 
+           colour = title_colour, 
+           size = 1,
+           arrow = arrow()) +
+  
+  labs(title = "Typical year calendar for PhD defenses",
+       subtitle = "Most PhDs begin in autumn, and they have until December three years\nlater to defend, hence the end-of-year peak",
+       x = "Month of defense",
+       y = "Number of PhDs",
+       caption = "Source: theses.fr") +
+  my_theme
+```
+
+## Try gganimate
+
+```{r}
+p <- thesis_clean %>% 
+  filter(year_defense < 2018,
+         year_defense > 1989) %>% 
+  group_by(year_defense) %>% 
+  count() %>% 
+  ggplot(aes(x = year_defense,
+             y = n,
+             group = 1)) +
+  geom_line(size = 3, 
+            colour = bar_col) +
+  # geom_point(size = 3,
+  #            colour = bar_col) +
+  
+  labs(title = "Number of PhD in France per year",
+       subtitle = "Such a reduction in 2001",
+       caption = "Source: theses.fr",
+       x = "Year of defense",
+       y = "Number of defended PhDs") +
+  ylim(1, 14000) +
+  my_theme +
+
+  transition_reveal(year_defense) + 
+  ease_aes("linear")
+
+animate(p, 
+        nframes = 100, 
+        fps = 10)
+```
+
+
+
+# Ecology and evolution
+
+## Get the data
+
+```{r}
+thesis_evology <- thesis_clean %>% 
+  filter(str_detect(discipline, 
+                    pattern = "Évolut|Evolut|evolut|évolut|Genetique des populations|Ecolog|ecolog|écolog|Écolog") |
+           discipline %in% c("Physiologie et biologie des organismes et populations", "Biologie des populations et ecologie"))  %>% 
+  drop_na(date_defense) %>% 
+  filter(!str_detect(discipline,
+                   pattern = "Terre|planete|lithos|geologie|Geologie|evolutionnaire|Materiaux|materiaux|gyneco|Gyneco"))
+```
+
+
+Explore this
+
+```{r}
+thesis_evology %>% 
+  count(discipline, sort = TRUE) %>% View
+```
+
+
+
+## Timeline
+
+```{r}
+thesis_evology %>% 
+  filter(year_defense >= 1990) %>% 
+    filter(year_defense < 2018) %>% 
+  group_by(year_defense) %>% 
+  ggplot(aes(x = year_defense)) +
+  geom_histogram(binwidth = 1,
+                 fill = bar_col) +
+  labs(title = "Number of PhD defended in ecology and evolution in France",
+       subtitle = "From 1990 to 2017",
+       x = "Year of PhD defense",
+       y = "Number of PhD",
+       caption = "Source: theses.fr") +
+  my_theme
+```
+
+
+
+```{r}
+thesis_evology %>% 
+  filter(year_defense >= 2010) %>% 
+    filter(year_defense < 2018) %>% 
+  mutate(day_defense2 = day(date_defense)) %>% 
+  group_by(year_defense,
+           month_defense,
+           day_defense2) %>% 
+  count() %>% 
+  ggplot(aes(x = month_defense, 
+             y = day_defense2, 
+             fill = n)) +
+  facet_wrap(~year_defense, ncol = 8) +
+  geom_tile() +
+  
+  labs(title = "Distribution of PhD defense over time",
+       subtitle = "",
+       x = "Day of the week",
+       y = "Defense month") +
+  scale_fill_gradient(high = bar_col, 
+                      low = title_colour) +
+  my_theme +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.3))
+```
+
+
+```{r}
+thesis_evology %>% 
+  filter(year_defense == 2010,
+         month_defense == "janvier") %>% 
+  head()
+```
+
+
+Since the first of january 
+```{r}
+thesis_evology %>% 
+  filter(year_defense >= 2010) %>% 
+    filter(year_defense < 2018) %>% 
+    mutate(day_defense2 = day(date_defense)) %>% 
+  filter(day_defense2 > 1) %>% 
+  group_by(year_defense,
+           month_defense,
+           day_defense2) %>% 
+  count() %>% 
+  ggplot(aes(x = month_defense, 
+             y = day_defense2, 
+             fill = n)) +
+  facet_wrap(~year_defense, ncol = 8) +
+  geom_tile() +
+  
+  labs(title = "Distribution of PhD defense over time",
+       subtitle = "",
+       x = "Day of the week",
+       y = "Defense month") +
+  
+scale_fill_gradient(high = bar_col, 
+                      low = title_colour) +
+  
+  my_theme +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.3))
+```
+
+```{r}
+thesis_evology %>% 
+  filter(year_defense >= 2010) %>% 
+    filter(year_defense < 2018) %>% 
+  mutate(day_defense2 = day(date_defense)) %>% 
+  filter(day_defense2 > 1) %>% 
+  group_by(year_defense,
+           month_defense,
+           day_defense) %>% 
+  count() %>% 
+  ggplot(aes(x = day_defense, 
+             y = month_defense, 
+             fill = n)) +
+  facet_wrap(~year_defense, ncol = 8) +
+  geom_tile() +
+  
+  labs(title = "Distribution of PhD defense over time",
+       subtitle = "",
+       x = "Day of the week",
+       y = "Defense month") +
+  
+  scale_fill_gradient(high = bar_col, 
+                      low = title_colour) +
+ my_theme +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.3))
+```
+
+
+```{r}
+thesis_evology %>% 
+  filter(year_defense == 2013,
+         day_defense == "dimanche") %>% 
+  view
+```
+
+Nothing scandalous.
