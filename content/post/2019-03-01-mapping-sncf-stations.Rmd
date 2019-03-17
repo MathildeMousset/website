@@ -26,7 +26,7 @@ Originally, when I downloaded the files from SNCF website for the first time, my
 
 >> Originally, for this post, I wanted to map the data on a French map, but I encountered a bit of trouble in getting the GPS coordinates of the stations, and I am still perfecting my fuzzyjoining. This might be a story for later, including the crushing of my cute naivety concerning name harmonizing in datasets made available within the same company.
 
-Today is the story of my crushed naivety, in the **Part 1**. Be ready for complaining, frustration, and no fairy-tale ending. I am mostly documenting it as a double reminder to myself: *i*) how to do fuzzyjoining and *ii*) why consistency in names is important, and ID columns should not be messed with!
+Today is the story of my crushed naivety, in the **Part 1**. Be ready for complaining, frustration, and no fairy-tale ending. I am mostly documenting it as a double reminder to myself: *i*) how to do fuzzy-joining and *ii*) why consistency in names is important, and ID columns should not be messed with!
 
 I however won't admit defeat that easily. I am a scientist, and I have spent months counting thousands of seeds, one month figuring out the perfect timing for pollinating a small *Brassicaceae* that you never heard of (it's a cool plant, though), weeks weighing plant bits and dissecting pollen anthesis under the binocular. You don't get me to quit that easily.
 
@@ -158,9 +158,9 @@ I have to be honest, I never tried fuzzy-joining anything before. I just read th
 
 The `fuzzyjoin` [package]("https://github.com/dgrtwo/fuzzyjoin") is written by David Robinson and it helps joining columns where the text is not exactly the same, that is, inexact matching.
 
-I believe that it is more targeted at text where there are some mistakes and small variations. Some of the names here differ by two words or more, so I was not completely sure of what would happen.
+I believe that it is targeted at text where there are some mistakes and small variations. Some of the names here differ by two or more words, so I am not completely sure of what would happen.
 
-There are several columns that could be of use: RG or UT. I have no idea what the titles mean.
+There are several columns that could be of use: RG or UT. I have no idea what the names mean, because apparently data dictionnaries are for loosers .
 
 Some tidying first. I first remove the "GARE" for UT and RG because the word itself in not in the name of the stations in the other file. Then, I harmonize the St/Saint abbreviation problem. And if there are duplicates, I select one of them.
 
@@ -210,7 +210,7 @@ fuzzy_left_join(essai_tgv,
 
 It did not work well (you can print the whole table, 6 lines were joined).
 
-By looking at the names in the essai_gare, I noticed some weird spaces. We remove them.
+By looking at the names in the `essai_gare`, I noticed some weird spaces. We remove them.
 
 ```{r}
 essai_gare <- select(essai_gare,
@@ -229,7 +229,7 @@ fuzzy_left_join(essai_tgv,
   filter(is.na(name_departure))
 ```
 
-It is a bit better, I get 23 empty lines. Actually, a bit more because I have now some duplicates (Avignon, for example, because the Avignon station gets two matches from the right file, so it doubles its lines). 
+It is a bit better, I get 23 empty lines. Actually, a bit more because I now have some duplicates (Avignon, for example, because the Avignon station gets two matches from the right hand file, so it doubles its lines). 
 
 Let's try with the other fuzzy join function, which uses a distance to match elements. I am afraid it will yield many false positive, but let's try.
 
@@ -242,14 +242,14 @@ stringdist_left_join(essai_tgv,
   select(departure_station, name_departure) %>%  filter(is.na(name_departure))
 ```
 
-24 non matched lines and many wrong matches. There are probably ways to tweak the distance parameter to decrease these false positive, but I figured the other function is better suited.
+24 non-matched lines and many wrong matches. There are probably ways to tweak the distance parameter to decrease these false positive, but I figured the other function is better suited.
 
 Except that then I spent a couple of more hours trying to get the fuzzy join to go further and I
 did not manage. I tried the other promising column too, to no end.
 
-At some point, I decided that I had lost enough hours of my life attempting to join SNCF files, and that I should move on. I forbade myself to touch this script ever again, except to turn it into a bitter rant about the messy data on the internet.
+At some point, I decided that I had lost enough hours of my life attempting to join SNCF files, and that I should move on. I forbade myself to touch this script ever again, except to turn it into a bitter rant about messy data on the internet.
 
-I now felt less lonely in this failure when I read that many people renounced joining the files during the #Tidytuesday challenge. I would be happy to know who managed, and how.
+I now feel less lonely in this failure when I read that many people renounced joining the files during the #Tidytuesday challenge. I would be happy to know who managed, and how.
 
 ## Closing thoughts on that hell
 
@@ -263,7 +263,7 @@ After giving some thinking to it while showering, I figured that I could do seve
 
 - Do several loops of the last one.  
 
-I think I could probably manage to get *something*. But it is an incredible dirty and painful way of doing it. I decided that I had more interesting things to do with my life than compensating for dubious data-management on my free time^[Like write two or three papers, apply for jobs, enjoy South of France amazing spring and plot network of evolutionary scientists as measured through PhD committees, you know, the fun things in life].
+I think I could probably manage to get *something*. But it is an incredible dirty and painful way of doing it. I decided that I had more interesting things to do with my life than compensating for dubious data-management on my free time^[Like write two or three papers, apply for jobs, enjoy South of France amazing spring and plot network of evolutionary scientists as measured through PhD commitees, you know, the fun things in life].
 
 I made my peace with not plotting anything related to SNCF on maps.
 
@@ -271,7 +271,7 @@ I made my peace with not plotting anything related to SNCF on maps.
 # SNCF mapping, the retour!
 
 
-But then was I thinking of my future while shaving^[That is a reference only French people can understand I am afraid] when I remembered seeing the number of passengers going through stations *somewhere* on the SNCF Open data website. And that *is* a cool data to plot on a map.
+But then was I thinking of my future while shaving^[That is a reference only French people can understand I am afraid] when I remembered seeing the number of passengers going through stations *somewhere* on the SNCF Open data website. And that *is* cool data to plot on a map.
 
 So mapping SNCF data, take 2!
 
@@ -290,22 +290,22 @@ library(ggrepel)
 I found a "station list" file, which is *not* the "reference list of stations" file that we have attempted to put to use before. It contains the Lambert coordinates of all stations, so that's sweet^[Why are these not in the station reference list, we shall never know]. We will let the station reference file sulk on its own in the directory forever, and use the station list file from now on.
 
 For the mapping, I will heavily rely on the advice from 
-[Sebastien Rochette]("https://statnmap.com/2018-07-14-introduction-to-mapping-with-sf-and-co/").
+[Sébastien Rochette]("https://statnmap.com/2018-07-14-introduction-to-mapping-with-sf-and-co/").
 
-We will use the `sf` package (for simple features), whose syntax is inspired from PostGIS. It is a relatively new package in R, but it is quite powerful and quite handy. It enable us to manipulate `sf` objects as data frames and to perform the usual operations on them (mutate, filter etc.).
+We will use the `sf` package (for simple features), whose syntax is inspired from PostGIS. It is a relatively new package in R, but it is quite powerful and quite handy. It enables us to manipulate `sf` objects as data frames and to perform the usual operations on them (mutate, filter etc.).
 
 
 ## Import the data
 
 [Data on the number of passengers in 2017 and 2018]("https://data.sncf.com/explore/dataset/frequentation-gares/table/?sort=nom_gare")
 
-These data is based on the number of tickets bought for great lines, and an extrapolation out of counts performed every other year for regional trains in the Ile de France region (around Paris).
+This data is based on the number of tickets bought for long lines, and an extrapolation out of counts performed every other year for regional trains in the Ile de France region (around Paris).
 
 People counted in: leaving, arriving, transiting.
 
 [List of stations with the Lambert Coordinates]("https://data.sncf.com/explore/dataset/liste-des-gares/table/")
 
-```{r import}
+```{r import, warning=FALSE, message=FALSE}
 station_freq <- read_delim("2019-03-01-frequentation-gares.csv", 
                            ";", escape_double = FALSE, trim_ws = TRUE)
 
@@ -336,9 +336,9 @@ if (!file.exists(file.path(extraWD, "departement.zip"))) {
 }
 ```
 
-The data come from Sebastien Rochette' Github page, but originally, they come from the Institut Nationnal de l'Information Géographique et Forestière, or [IGN]("http://www.ign.fr/"). If you are French and you never spent hours looking at maps on the [Geoportail]("https://www.geoportail.gouv.fr/") website, it is very sad.
+The data come from Sébastian Rochette' Github page, but originally, they come from the Institut National de l'Information Géographique et Forestière, or [IGN]("http://www.ign.fr/"). If you are French and you never spent hours looking at maps on the [Geoportail]("https://www.geoportail.gouv.fr/") website, it is very sad.
 
-Anyway. We got French department data. We reproject with `st_transform()`.
+Anyway. We got French department data. We re-project with `st_transform()`.
 
 ```{r}
 departements_L93 <- st_read(dsn   = extraWD, 
@@ -362,7 +362,7 @@ france <- ggplot(departements_L93) +
 france
 ```
 
-So far, so good. This was the easy part. Now, let's go back to joining our station location and station crowding data.
+So far, so good. This was the easy part. Now, let's go back to joining station location and station users's data.
 
 ## Joining station files
 
@@ -378,7 +378,7 @@ station_list_voyageurs <- mutate(station_list,
 ```
 
 
-Now we go for the filter! (hold one's breath)
+Now we go for the join! (hold one's breath)
 
 
 ```{r}
@@ -504,7 +504,7 @@ The stations in the Paris region are awfully crowded. The Rhone-Alpes region, as
 
 
 OK, now we want to add the passenger data on the map.
-To get a feel of the number max of passengers, let's sort the file.
+To get a feel of the number of passengers in the largest stations, let's sort the file.
 
 ```{r}
 station_all %>% 
@@ -513,7 +513,7 @@ station_all %>%
   arrange(desc(total_voyageurs_2017))
 ```
 
-There was a "Total" line somewhere. Let's get rid of it.
+There was a "Total" line somewhere. I am against this kind of practice. Let's get rid of it.
 
 ```{r}
 station_all <- filter(station_all, 
@@ -667,6 +667,6 @@ idf +
   theme_ipsum_rc()
 ```
 
-We can see the lines leaving Paris for the surrounding areas.
+We can see the lines leaving Paris for the surrounding areas. They get less and less passengers the further they go.
 
 And that is all for today.

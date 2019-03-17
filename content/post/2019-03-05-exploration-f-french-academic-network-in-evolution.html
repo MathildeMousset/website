@@ -1,0 +1,426 @@
+---
+title: Exploration of French Academic Network in Evolution
+author: Mathilde Mousset
+date: '2019-03-05'
+slug: exploration-f-french-academic-network-in-evolution
+categories: []
+tags:
+  - data visualisation
+  - data analysis
+  - R
+  - network
+  - evolution
+  - PhD
+output:
+  blogdown::html_page:
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#getting-all-the-data">Getting all the data</a><ul>
+<li><a href="#get-phd-data">Get PhD data</a></li>
+<li><a href="#get-evolution-related-phd">Get evolution-related PhD</a></li>
+<li><a href="#get-advisor-ans-commitees-data">Get advisor ans commitees data</a></li>
+</ul></li>
+<li><a href="#building-the-network">Building the network</a></li>
+<li><a href="#make-graph">Make graph</a></li>
+<li><a href="#plot-the-network">Plot the network</a></li>
+<li><a href="#plot-the-network-2015-to-2018">Plot the network 2015 to 2018</a></li>
+<li><a href="#plot-the-network-in-montpellier">Plot the network in Montpellier</a></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>Some time ago, I donwloaded the summary of all PhD thesis defended in France from 1986 and 2018, as they appear in the national database <a href="%22these.fr%22">these.fr</a>. One of the national database, at least<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>.</p>
+<p>It is a big file, with 369554 lines (at the date I downloaded it), and there are many things to investigate with it. Today I will focus on a network analysis, inspired by the great posts of <a href="%22coulmont.com/blog/2018/12/02/sociologue-reseau-theses-2018/%22">Baptiste Coulmont</a> and <a href="%22https://oliviergimenez.github.io/post/network_ecology/%22">Olivier Gimenez</a>, who respectively conducted such an analysis in social sciences and ecology. Being an evolutionnary biologist, I could not wait to perform one in evolution!</p>
+<p>I modified the code from Olivier Gimenez to apply it to French evolutionary biologists. Or rather, evolutionary biologists that are involved in supervising and evaluating PhDs (a process which also involves non-French scientists).</p>
+</div>
+<div id="getting-all-the-data" class="section level1">
+<h1>Getting all the data</h1>
+<div id="get-phd-data" class="section level2">
+<h2>Get PhD data</h2>
+<p>I downloaded and cleaned the whole file from <a href="%22theses.fr%22">theses.fr</a> using the following commands. Beware, it takes some time.</p>
+<pre class="r"><code>i &lt;- 1:400
+i &lt;- i*1000
+
+URL &lt;- paste0(&quot;https://www.theses.fr/?q=&amp;fq=dateSoutenance:[1965-01-01T23:59:59Z%2BTO%2B2018-12-31T23:59:59Z]&amp;checkedfacets=&amp;start=&quot;,i, &quot;&amp;sort=none&amp;status=status:soutenue&amp;access=&amp;prevision=&amp;filtrepersonne=&amp;zone1=titreRAs&amp;val1=&amp;op1=AND&amp;zone2=auteurs&amp;val2=&amp;op2=AND&amp;zone3=etabSoutenances&amp;val3=&amp;op3=AND&amp;zone4=dateSoutenance&amp;val4a=&amp;val4b=&amp;type=lng=&amp;checkedfacets=&amp;format=csv&quot;)
+
+map(URL, getURL) %&gt;% write.csv(.,&quot;./1_raw_data/SERP_2.csv&quot;)
+
+thesis &lt;- read.csv(&quot;./1_raw_data/SERP_2.csv&quot;,
+                   sep = &quot;;&quot;, quote = &quot;&quot;, skip = 1,
+                   stringsAsFactors = F)
+
+# Improve colnames
+colnames(thesis) &lt;- c(&quot;author&quot;, &quot;author_id&quot;, &quot;title&quot;, 
+                      &quot;thesis_advisor1&quot;, &quot;thesis_advisor2&quot;, &quot;thesis_advisors_id&quot;, 
+                      &quot;university&quot;, &quot;university_id&quot;, &quot;discipline&quot;, 
+                      &quot;status&quot;, &quot;date_first_registration&quot;, &quot;date_defense&quot;, 
+                      &quot;language&quot;, &quot;thesis_id&quot;, 
+                      &quot;online&quot;, &quot;date_upload&quot;, &quot;date_update&quot;, &quot;whatever&quot;)
+
+
+# Remove weird column in the end
+# Get rid of duplicated header rows &amp; crappy lines
+# Put the names of authors or advisors in lower case plus majuscule
+# Get date in YMD format
+# Get year, month and week onf the day
+thesis2 &lt;- thesis %&gt;% 
+  select(-whatever) %&gt;% 
+  filter(!str_detect(online, &quot;Accessible en ligne&quot;)) %&gt;% 
+  mutate(author          = str_to_title(author),
+         thesis_advisor1 = str_to_title(thesis_advisor1),
+         thesis_advisor2 = str_to_title(thesis_advisor2)) %&gt;% 
+  filter(title != &quot;&quot;,
+         status == &quot;soutenue&quot;,
+         !str_detect(&quot;discipline&quot;)) %&gt;% 
+  mutate(date_first_registration = dmy(date_first_registration),
+         date_defense            = dmy(date_defense),
+         date_update             = dmy(date_update),
+         date_upload             = dmy(date_upload)) %&gt;% 
+  mutate(year_defense  = year(date_defense),
+         month_defense = month(date_defense, label = TRUE, abbr = FALSE),
+         day_defense   = wday(date_defense,  label = TRUE, abbr = FALSE)) %&gt;% 
+  mutate(title = str_replace(title, &quot;\&quot;\&quot;&quot;, &quot;&quot;)) %&gt;% 
+  mutate(title = str_replace(title, &quot;\&quot;&quot;, &quot;&quot;)) %&gt;% 
+  
+  filter(!str_detect(title, &quot;Fa yan kan zhong guo&quot;))
+
+
+# Save
+write.table(thesis2, 
+            &quot;./2_clean_data/thesis.csv&quot;,
+            quote = FALSE,
+            sep = &quot;;&quot;,
+            dec = &quot;.&quot;,
+            row.names = FALSE)</code></pre>
+<pre><code>## Using &#39;,&#39; as decimal and &#39;.&#39; as grouping mark. Use read_delim() for more control.</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_character(),
+##   date_first_registration = col_logical(),
+##   date_defense = col_date(format = &quot;&quot;),
+##   date_upload = col_date(format = &quot;&quot;),
+##   date_update = col_date(format = &quot;&quot;),
+##   year_defense = col_double()
+## )</code></pre>
+<pre><code>## See spec(...) for full column specifications.</code></pre>
+</div>
+<div id="get-evolution-related-phd" class="section level2">
+<h2>Get evolution-related PhD</h2>
+<p>I want the PhDs that were in the evolutionary field. It is a bit tricky because the field name (<code>discipline</code> in the dataframe) depends on doctoral schools, and changes every couple of years within doctoral schools.</p>
+<p>I first tried filtering by discipline names that contain variation on the word evolution (“Évolut|Evolut|evolut|évolut|”) using the <code>str_detect()</code> function from the excellent <code>stringr</code> package.</p>
+<p>I obtained a couple of fields that have nothing to do with evolutionary biology. For example, “evolution of terrestrial systems”. Fortunately, the list of fields was not so long, so I could check it and manually filter out the fields that really do not belong (mostly from geology and earth sciences).</p>
+<p>We can see that there are fields that include evolution but are much larger, such as “biological sciences and evolution”, but I don’t think much can be done about it.</p>
+<p>Then I noticed that I had very few PhDs from before 2000, so I spent a couple of minutes searching for the PIs in my lab, and got some more fields to add. I am sure that we are missing some people<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>, but I think we got the bulk of evolutionary biology PhDs.</p>
+<pre class="r"><code>thesis_evolution &lt;- thesis %&gt;% 
+  filter(str_detect(discipline, 
+                    pattern = &quot;Évolut|Evolut|evolut|évolut|Genetique des populations&quot;) |
+           discipline %in% c(&quot;Physiologie et biologie des organismes et populations&quot;, &quot;Biologie des populations et ecologie&quot;)) %&gt;% 
+  drop_na(date_defense) %&gt;% 
+  filter(!str_detect(discipline,
+                   pattern = &quot;Terre|planete|lithos|geologie|Geologie|evolutionnaire|Materiaux|materiaux&quot;))</code></pre>
+<p>We now have 1180 PhD, from 1986 to 2018.</p>
+<p>We can look at the distribution of the year of defense. I don’t know whether the lower number of PhDs in the late nineties are because of a large shift towards a different name for the fields or some real temporary loss of interest in evolutionary biology. I would wagger on the former.</p>
+<pre class="r"><code>thesis_evolution %&gt;% 
+  ggplot(aes(x = date_defense)) +
+  geom_histogram() +
+  theme_ipsum_rc() +
+  labs(title = &quot;Nb of PhD defended in evolution, 1986 - 2018&quot;,
+       subtitle = &quot;Obviously, some are missing&quot;,
+       x = &quot;Year&quot;,
+       y = &quot;Nb of defended PhD&quot;,
+       caption = &quot;Data: theses.fr&quot;)</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/post/2019-03-05-exploration-f-french-academic-network-in-evolution_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+</div>
+<div id="get-advisor-ans-commitees-data" class="section level2">
+<h2>Get advisor ans commitees data</h2>
+<p>Now that we have the ID of the PhDs related to evolution, we need to get the data about the advisors and the commitees related to these PhDs. To do that, we scrap the webpage of each PhD (using the PhD ID) using the <code>rvest</code> package.</p>
+<pre class="r"><code>thesis_id &lt;- thesis_evolution$thesis_id # get PhD ids
+
+total_network &lt;- data.frame(jury_members = &quot;&quot;,
+                            jury_links = &quot;&quot;,
+                            these      = &quot;&quot;,
+                            directeurs = &quot;&quot;,
+                            advisor_id = &quot;&quot;)
+
+
+for (i in 1:length(thesis_id)) {
+  
+  # get info on current PhD
+  data_phd_evolution &lt;- read_html(paste0(&quot;http://www.theses.fr/&quot;,
+                                      thesis_id[i]) ) 
+  
+  # get name PhD supervisor for 
+  directeurs &lt;- bind_cols(
+    directeurs = data_phd_evolution  %&gt;%
+      html_nodes(&quot;div .donnees-ombre p&quot;) %&gt;%
+      .[[1]] %&gt;%
+      html_nodes(&quot;a&quot;) %&gt;%
+      html_text()
+    ,
+    advisor_id = data_phd_evolution  %&gt;%
+      html_nodes(&quot;div .donnees-ombre p&quot;) %&gt;%
+      .[[1]] %&gt;%
+      html_nodes(&quot;a&quot;) %&gt;%
+      html_attr(name=&quot;href&quot;)
+  ) %&gt;% mutate(these = thesis_id[i])
+  
+ 
+  # get names of people in commitees
+  jury &lt;- bind_cols( 
+    jury_members = data_phd_evolution %&gt;%
+      html_nodes(&quot;div .donnees p a&quot;) %&gt;%
+      html_text()
+    ,
+    jury_links = data_phd_evolution %&gt;%
+      html_nodes(&quot;div .donnees p a&quot;) %&gt;%
+      html_attr(name=&quot;href&quot;)
+  ) %&gt;% mutate(  these = thesis_id[i] )
+  
+  # put all together
+  network &lt;- jury %&gt;% left_join(directeurs,by=&quot;these&quot;) 
+  total_network &lt;- bind_rows(total_network, network)
+}
+
+# Because the process is a bit long, we save the file
+save(thesis_evolution,
+     total_network,
+     file = &quot;2019-03-05-network_total.RData&quot;)</code></pre>
+</div>
+</div>
+<div id="building-the-network" class="section level1">
+<h1>Building the network</h1>
+<p>Baptiste Coulmont weighted the different types of links between scientists depending on their role in the PhD process.</p>
+<ul>
+<li><p>If two scientists co-supervise a PhD, the link has a weight of 3, because we assume that co-supervising a PhD student creates or is the consequence of a strong link.</p></li>
+<li><p>If one of them is a supervisor and the other is in the PhD commitee, the link has a weight 2, indicating a moderate link.</p></li>
+<li><p>If both researchers are in the same committee, the weight is 1.</p></li>
+</ul>
+<p>The weight of these links can be added (a lot of people are involved both in co-supervisions and commitees).</p>
+<pre class="r"><code># Link supervisor - supervisor
+advisor_advisor &lt;- total_network %&gt;% 
+  select(these, directeurs) %&gt;% 
+   mutate(directeurs = str_trim(directeurs)) %&gt;% 
+  unique() %&gt;% 
+  group_by(these) %&gt;% 
+  mutate(N = n()) %&gt;%
+  
+  filter(N == 2) %&gt;% # keep co-supervision w/ 2 supervisors 
+  mutate(rang  = rank(directeurs)) %&gt;% 
+  spread(key   = rang, 
+         value = directeurs) %&gt;% 
+  
+  ungroup() %&gt;% 
+  select(name_1 = `1`, name_2 = `2`) %&gt;% 
+  mutate(poids = 3)
+
+
+# Link advisor - jury
+advisor_jury &lt;- total_network %&gt;% 
+  
+  select(name_1 = jury_members,
+         name_2 = directeurs) %&gt;% 
+  
+      mutate(name_1 = str_trim(name_1),
+           name_2 = str_trim(name_2)) %&gt;% 
+  
+  filter( name_1 != &quot;&quot;) %&gt;%
+  mutate(poids = 2) %&gt;%
+  group_by(name_1, name_2) %&gt;% 
+  # Sum weight over links
+  summarize(poids = sum(poids))
+
+# Jury - jury links
+jury_jury &lt;- total_network %&gt;% 
+  select(jury_members,these) %&gt;% 
+  unique() %&gt;% 
+  filter(jury_members != &quot;&quot;)</code></pre>
+<p>Here are what the files look like:</p>
+<pre class="r"><code>head(advisor_advisor)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   name_1                     name_2           poids
+##   &lt;chr&gt;                      &lt;chr&gt;            &lt;dbl&gt;
+## 1 Domitien Debouzie          Frédéric Menu        3
+## 2 Brigitte Crouau-Roy        Evelyne Heyer        3
+## 3 François Mallet            Laurent Duret        3
+## 4 Louis Deharveng            Thierry Deuve        3
+## 5 Antoine Kremer             Sophie Gerber        3
+## 6 Marie-Catherine Boisselier Philippe Bouchet     3</code></pre>
+<pre class="r"><code>head(advisor_jury)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+## # Groups:   name_1 [2]
+##   name_1                 name_2               poids
+##   &lt;chr&gt;                  &lt;chr&gt;                &lt;dbl&gt;
+## 1 Abdelaziz Heddi        Fabrice Vavre            2
+## 2 Abdelaziz Heddi        Frédéric Fleury          2
+## 3 Abdelaziz Heddi        Mylène Weill             2
+## 4 Abdelaziz Heddi        Olivier Duron            2
+## 5 Abdelhamid El Mousadik Bouchaïb Khadari         2
+## 6 Abdelhamid El Mousadik Cherkaoui El Modafar     2</code></pre>
+<pre class="r"><code>head(jury_jury)</code></pre>
+<pre><code>##        jury_members        these
+## 1 Michel Boulétreau 1988LYO10171
+## 2 Jean-Marc Deragon 2010PERP1263
+## 3     Andrew Leitch 2010PERP1263
+## 4  Alain Ghesquière 2010PERP1263
+## 5      Jérôme Salse 2010PERP1263
+## 6 Sébastien Aubourg 2010PERP1263</code></pre>
+</div>
+<div id="make-graph" class="section level1">
+<h1>Make graph</h1>
+<p>Now we use the <code>graph_from_data_frame()</code> from the <code>igraph</code> package to create the graph.</p>
+<pre class="r"><code># Make non-directed graph for jur_jury
+g_j &lt;- graph_from_data_frame(jury_jury,
+                              directed = F)
+
+ 
+# Create the vertex sequence
+igraph::V(g_j)$type &lt;- V(g_j)$name %in% jury_jury$jury_members
+
+g_j_1 &lt;- bipartite_projection(g_j, which = &quot;true&quot;)
+
+
+jurys &lt;- as_long_data_frame(g_j_1) %&gt;%
+  select(name_1 = `ver[el[, 1], ]`, 
+         name_2 = `ver2[el[, 2], ]`, 
+         poids  = weight)
+
+reseau_petit &lt;- bind_rows(advisor_advisor,
+                          advisor_jury,
+                          jurys) %&gt;%
+  group_by(name_1, name_2) %&gt;% 
+  summarize(poids = sum(poids)) # data.frame from which the network will be created</code></pre>
+<pre><code>## Warning in bind_rows_(x, .id): binding character and factor vector,
+## coercing into character vector
+
+## Warning in bind_rows_(x, .id): binding character and factor vector,
+## coercing into character vector</code></pre>
+</div>
+<div id="plot-the-network" class="section level1">
+<h1>Plot the network</h1>
+<p>We correlate the size of the point to <em>betweenness</em> of nodes. The width of the edges correlates with the summed weight of the link between the two scientists (the strenght of their connection).</p>
+<p>We determine communities trough a <a href="%22https://igraph.org/r/doc/cluster_walktrap.html%22">cluster_walktrap</a> algorithm. The <code>cluster_walktrap()</code> function, from the <code>igraph</code> package tries to find densely connected subgraphs (communities) via random walks. The idea is that short random walks tend to stay in the same community. To be honest, it’s mainly to add colour to the graph.</p>
+<pre class="r"><code>g &lt;- graph_from_data_frame(reseau_petit, 
+                           directed = F) 
+
+# Simplfy the graph by removing the identic loops (summing their links)
+g &lt;- simplify(g, edge.attr.comb = sum)
+
+V(g)$degres &lt;- degree(g)
+
+# Get surname only
+V(g)$label  &lt;- gsub(&quot;^\\S+\\s+(.+)$&quot;,&quot;\\1&quot;,V(g)$name)
+
+
+# determine communities
+# step = the length of the random walk to perform
+V(g)$communaute &lt;- as.character(cluster_walktrap(g,
+                                                 steps = 10)$membership)  # 15 originellement
+
+V(g)$closeness &lt;- (5*closeness(g))^10</code></pre>
+<pre><code>## Warning in closeness(g): At centrality.c:2784 :closeness centrality is not
+## well-defined for disconnected graphs</code></pre>
+<pre class="r"><code># network metric betweeness
+V(g)$btwns       &lt;- betweenness(g) 
+V(g)$eigen_centr &lt;- eigen_centrality(g)$vector
+
+
+# delete edges with weight &lt; 4
+g &lt;- delete_edges(g, which(E(g)$poids &lt; 4)) # 5 initiallement
+
+
+# to which community you belong
+V(g)$cluster_number &lt;- clusters(g)$membership 
+
+g &lt;- induced_subgraph(g,
+                      V(g)$cluster_number == which( max(clusters(g)$csize) == clusters(g)$csize) )
+
+# width of edge proportional to weight
+E(g)$weight &lt;- 1/E(g)$poids 
+
+
+# do not display all names
+V(g)$label &lt;- ifelse(V(g)$degres &lt; 9, 
+                     &quot;&quot;, 
+                     V(g)$label)  # 20 initialement</code></pre>
+<pre class="r"><code>graphe_1 &lt;- ggraph(g,
+                   layout = &quot;igraph&quot;,
+                   algorithm = &quot;fr&quot;) + 
+  
+  geom_edge_link(aes(width = 0.1*poids), alpha = 0.1, 
+                 end_cap   = circle(5, &#39;mm&#39;), 
+                 start_cap = circle(5, &#39;mm&#39;)) +
+  
+  geom_node_point(aes(size = eigen_centr),
+                  color = &quot;white&quot;, alpha = 1) +
+  
+  geom_node_point(aes(color = communaute,
+                      size = eigen_centr), 
+                  alpha = 0.5) +
+  
+  scale_size_area(max_size = 20) +
+  
+  geom_node_text(aes(label = label),
+                 size = 2.5, 
+                 repel = T,
+                 box.padding = 0.15)</code></pre>
+<div class="figure">
+<img src="/images/2019-03-05-evolution_all.png" />
+
+</div>
+<p>The first thing that I noticed is internal: it is a particularly good feeling when you know the people that are on a figure.</p>
+<p>I can recognize groups of people whom I know work and publish together, which is quite reassuring.</p>
+<p>At first, I was surprised that people from a same lab were scattered all over the place. However, since PhD commitees must have some proportion of non-local people, there must be connections between people from different labs.</p>
+<p>I hope that this also mean something positive about the scientific ties accross labs and France in general.</p>
+</div>
+<div id="plot-the-network-2015-to-2018" class="section level1">
+<h1>Plot the network 2015 to 2018</h1>
+<p>Because the dataset is large, it is difficult to plot more names. So let’s see what the network looks like in the past three years.</p>
+<p>I turned the script in functions to perform the same scrapping as above and save some space. See <strong>LINK</strong> for the source file.</p>
+<pre class="r"><code>thesis_evolution_2015_2018 &lt;- thesis_evolution %&gt;% 
+  filter(year_defense &gt; 2014) </code></pre>
+<pre class="r"><code>scrapped_2015_2018 &lt;- scrap_phd_webpages(thesis_evolution_2015_2018)</code></pre>
+<pre class="r"><code>graphe_2 &lt;- make_network_full(scrapped_2015_2018,
+                              my_waltrap = 10,
+                              my_edge    = 3,
+                              my_degree  = 2,
+                              my_title   = &quot;Network of evolutionary biologists&quot;,
+                              my_subtitle = &quot;Based on French PhD advising and commitees, 2015 - 2018&quot;)</code></pre>
+<div class="figure">
+<img src="/images/2019-03-05-evolution_2015_2018.png" />
+
+</div>
+</div>
+<div id="plot-the-network-in-montpellier" class="section level1">
+<h1>Plot the network in Montpellier</h1>
+<p>Since I did my PhD in Montpellier, I was very curious to see how the local network is structured.</p>
+<pre class="r"><code>thesis_evolution_Montpellier &lt;- filter(thesis_evolution,
+                             str_detect(university,
+                                        pattern = &quot;Montpellier&quot;))</code></pre>
+<pre class="r"><code>scrapped_Montpellier &lt;- scrap_phd_webpages(thesis_evolution_Montpellier)</code></pre>
+<pre class="r"><code>graphe_3 &lt;- make_network_full(scrapped_Montpellier,
+                              my_waltrap = 10,
+                              my_edge    = 4,
+                              my_degree  = 5,
+                              my_title   = &quot;Network of evolutionary biologists&quot;,
+                              my_subtitle = &quot;Based on French PhD advising and committes, Montpellier&quot;)</code></pre>
+<div class="figure">
+<img src="/images/2019-03-05-evolution_Montpellier.png" />
+
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>I heard that the file has a slighly different number of lines than the file downloaded from HAL, another national archive, but I cannot find the discussion again<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>I know of at least one, but the field is “biology”, and really, it’s too wide!<a href="#fnref2">↩</a></p></li>
+</ol>
+</div>
