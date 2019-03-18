@@ -1,9 +1,9 @@
 ---
-title: Using the Tidyverse to explore French PhD defenses
+title: Exploring French PhD defenses dates
 author: Mathilde Mousset
 date: '2019-03-17'
 slug: using-the-tidyverse-to-explore-french-phd-defenses
-draft: true
+draft: false
 categories:
   - R
 tags:
@@ -23,9 +23,12 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(extrafont)
 library(lubridate)
 library(gganimate)
 library(knitr)
+
+windowsFonts(RobotoBold = windowsFont("Roboto-Bold"))
 ```
 
 ```{r my_theme, echo=FALSE}
@@ -88,34 +91,50 @@ my_theme <- theme(
     panel.border = element_blank())
 ```
 
+Today I will use the tools of the tidyverse to explore a file with the data on PhD defended in France from 1986 to 2018. 
 
-# General information
+I downoalded the fille from the national database [these.fr]("these.fr") sometimes in December 2018, and then sort of forgot about it. Today, I will do a rough exploration of the number of PhD over time, and on when the PhDs are defended within year.
 
-I downloaded all thesis defended in France and recorded on the <these.fr>[these.fr] datatabase on the 14 December 2018. This datafile does not take into account thesis that were never defended, or are still under completion to this date.
+I thought that it was quite fun that a #Tidytuesday was about US PhDs, when I have wanted to have a look at French PhDs for two months. The discipline field is much less tidy, though, so I will not explore it in this post, and focus on dates.
 
-I first did some benign cleaning (remove non data lines, repeated headers, convert dates into universal format etc.) and saved the clean data.
 
+# Data
+
+I downloaded all thesis defended in France and recorded on the [theses.fr]("theses.fr") datatabase on the 14 December 2018. This datafile does not take into account thesis that were never defended, or were still under completion at this date.
+
+The code for the downoading and cleaning can be found in the [previous post]("https://tender-curie-5b83bc.netlify.com/2019/03/05/exploration-f-french-academic-network-in-evolution/").
 
 ```{r load_data}
 load("2019-03-17-thesis.RData")
 ```
 
+It is a big file, with `r nrow(thesis2)` lines (at the date I downloaded it).
 
-There are PhDs with several authors, separated by commas. I filter them out.
-Then, we fix the advisor columns. Right now, the advisor 1 is XY and the advisor 2 is YX. When there are two (or more) advisors, their names are in the same column, separated by a comma.
+A first exploration of the author column using the Viewer pane indicates that they are PhDs with several authors, separated by a comma. 
+
+```{r}
+thesis2 %>% 
+  select(author, author_id, year_defense, discipline) %>% 
+  filter(str_detect(author, ",")) %>%
+  head(10)
+```
+
+In the 1467 rows, there is a mix of PhDs with two authors^[I did not know this was possible], and PhDs whose authors filled all their secondary names, with colons. I don't think I can separate the two cases. Since I am not following each author individualy, it does not matter.
+
+Then, we fix the advisor columns. Right now, the advisor 1 is XY and the advisor 2 is YX. When there are two (or more) advisors, their names are in the same column, separated by a comma. I also suppress the few PhDs that were before 1986, and in 2018, because I don't have the full 2018 year.
 
 
 ```{r}
 thesis_clean <- thesis2 %>% 
+  filter(year_defense > 1986,
+         year_defense < 2018) %>% 
   filter(!duplicated(thesis_id)) %>% 
-  filter(!str_detect(author, pattern = ",")) %>% 
   select(-thesis_advisor2) %>% 
   mutate(advisors = str_split(thesis_advisor1, ","))
 ```
 
 
-
-# Some general numbers
+# Number of PhDs defended in France
 
 The number of thesis defended in France has decreased around the 2000, but rose again to similar level as before in the past decade.
 
@@ -123,15 +142,51 @@ The number of thesis defended in France has decreased around the 2000, but rose 
 thesis_clean %>% 
   ggplot(aes(x = year_defense)) +
   geom_histogram(binwidth = 1,
-                 fill = bar_col) +
+                 fill = bar_col, 
+                 colour = title_colour) +
   labs(title = "Number of PhD defended in France since 1986",
-       subtitle = "Why is there such a gap in the 2000 ?",
+       subtitle = "",
        caption = "Source: theses.fr",
        x = "Year of PhD defense",
        y = "Number of thesis") +
   my_theme
 ```
 
+
+Another way to look at it is with a little animation, using the `gganimate` package.
+
+
+```{r}
+p <- thesis_clean %>% 
+  filter(year_defense < 2018,
+         year_defense > 1989) %>% 
+  group_by(year_defense) %>% 
+  count() %>% 
+  ggplot(aes(x = year_defense,
+             y = n,
+             group = 1)) +
+  geom_line(size = 3, 
+            colour = bar_col) +
+  # geom_point(size = 3,
+  #            colour = bar_col) +
+  
+  labs(title = "Number of PhD defended in France per year",
+       subtitle = "",
+       caption = "Source: theses.fr",
+       x = "Year of defense",
+       y = "Number of defended PhDs") +
+  ylim(1, 14000) +
+  my_theme +
+
+  transition_reveal(year_defense) + 
+  ease_aes("linear")
+
+animate(p, 
+        nframes = 100, 
+        fps = 10)
+```
+
+# Number of supervisors
 
 Most PhDs have one or two supervisors. A couple have more.
 
@@ -143,7 +198,9 @@ thesis_clean %>%
 ```
 
 
-There are about 2500 persons with two PhDs (based on author ID), whith is probably correct. Whether the people with four to six PhD represent a problem in author ID attribution, real PhDs, or crackpots who managed to get a varnish of science is hard to tell. 
+# People with more than one PhDs
+
+There are about 2400 persons with two PhDs (based on author ID). This seems reasonable. Whether the people with four to six PhD represent a mistake in author ID attribution, real PhDs, or crackpots who managed to get a varnish of science is hard to tell. 
 
 ```{r}
 thesis_clean %>% 
@@ -157,7 +214,8 @@ thesis_clean %>%
   
   ggplot(aes(x = n)) +
   geom_histogram(binwidth = 1,
-                 fill = bar_col) +
+                 fill = bar_col,
+                 colour = title_colour) +
   coord_flip() +
   labs(title = "People with more than one PhD",
        subtitle = "Some people hold more than three PhDs... O_O",
@@ -171,7 +229,7 @@ thesis_clean %>%
 
 # Number of thesis per supervisor
 
-While most people supervised or helped supervise a dozen of PhDs, a decent number of people supervised more than 20 PhDs, which I think as an awesome lot. In France, this is likely to depend on the field. In science doctoral schooln the number of PhD that a PI can supervise at any given time can be limited. I believe that it is a different culture in the humanities.
+While most people supervised or helped supervise a dozen of PhDs, a decent number of people supervised more than 20 PhDs, which I think is **a lot**. In France, this is likely to depend on the field. In hard sciences doctoral schools the number of PhD that a PI can supervise at any given time can be limited. I believe that it is a different culture in the humanities.
 
 
 ```{r}
@@ -187,7 +245,8 @@ thesis_clean %>%
   
   ggplot(aes(x = n)) +
   geom_histogram(binwidth = 0.1,
-                 fill = bar_col) +
+                 fill = bar_col,
+                 colour = title_colour) +
   coord_flip() +
    scale_x_continuous(trans = "log10") +
      scale_y_continuous(trans = "log10") +
@@ -202,32 +261,13 @@ thesis_clean %>%
 
 # When are PhD defended?
 
-```{r}
-thesis_clean %>% 
-  filter(year_defense >= 1990) %>% 
-    filter(year_defense < 2018) %>% 
-  group_by(year_defense) %>% 
-  
-  ggplot(aes(x = year_defense)) +
-  geom_histogram(binwidth = 1,
-                 fill = bar_col) +
-  labs(title = "Number of PhD defended in France",
-       subtitle = "From 1990 to 2017",
-       x = "Year of PhD defense",
-       y = "Number of PhD",
-       caption = "Source: theses.fr") +
-  my_theme
-```
+Let's focus on PhD defended since 2010, and try to use heatmaps to see the patterns across months. Yes, I like heatmaps a bit too much.
 
+## Which are the busiest months to defend?
 
-
-
-
-
-```{r}
+```{r, fig.width=9}
 thesis_clean %>% 
   filter(year_defense >= 2010) %>% 
-    filter(year_defense < 2018) %>% 
   mutate(day_defense2 = day(date_defense)) %>% 
   group_by(year_defense,
            month_defense,
@@ -242,28 +282,25 @@ thesis_clean %>%
   
   labs(title = "Distribution of PhD defense over time",
        subtitle = "",
-       x = "Day of the week",
-       y = "Defense month") +
-  # scale_fill_gradientn(colours = wes_palette("Zissou1", 
-  #                                            100,
-  #                                            type = "continuous")) +
-  
+       x = "Month of defense",
+       y = "Day of the month") +
+ 
   scale_fill_gradient(high = bar_col, 
                       low = title_colour) +
-  
-  my_theme +
+   my_theme +
   theme(axis.text.x = element_text(angle = 90,
                                    hjust = 1,
-                                   vjust = 0.3))
+                                  vjust = 0.3))
 ```
 
-Since the first of january  :
+There is a weird pattern, where a lot of PhDs are defended on the first of January in the early year. I suspect tat this represents PhD for which the date of defense was missing, so it got assigned to 01/01.
 
-```{r}
+If we ignore first of January (since it is a holiday in France, it is unlikely that a lot of PhD are really defended on that day, and that it would biais the rest of the dataset).
+
+```{r, fig.width=9}
 thesis_clean %>% 
   filter(year_defense >= 2010) %>% 
-    filter(year_defense < 2018) %>% 
-    mutate(day_defense2 = day(date_defense)) %>% 
+  mutate(day_defense2 = day(date_defense)) %>% 
   filter(day_defense2 > 1) %>% 
   group_by(year_defense,
            month_defense,
@@ -287,38 +324,15 @@ thesis_clean %>%
                                    vjust = 0.3))
 ```
 
-```{r}
-thesis_clean %>% 
-  filter(year_defense >= 2010) %>% 
-    filter(year_defense < 2018) %>% 
-  mutate(day_defense2 = day(date_defense)) %>% 
-  filter(day_defense2 > 1) %>% 
-  group_by(year_defense,
-           month_defense,
-           day_defense) %>% 
-  count() %>% 
-  ggplot(aes(x = day_defense, 
-             y = month_defense, 
-             fill = n)) +
-  facet_wrap(~year_defense, ncol = 8) +
-  geom_tile() +
-  
-  labs(title = "Distribution of PhD defense over time",
-       subtitle = "",
-       x = "Day of the week",
-       y = "Defense month") +
-  
-    scale_fill_gradient(high = bar_col, 
-                      low = title_colour) +
- my_theme +
-  theme(axis.text.x = element_text(angle = 90,
-                                   hjust = 1,
-                                   vjust = 0.3))
-```
+Now, we begin to see paterns:  
+
+ - The empty line during the two first weeks of August, when people are on holidays, and most university administration are closed.   
+ - The high numbers in December. This makes sense, because a lot of the PhD begin in september-december. The funding is for three years, and if you begin in September, you have to defend before December three years later. So November and December are busy months for jurys.
+
+Another way to look at it iw with a simple line graph^[Yes, I do know that there are other graphs than heatmaps].
 
 
-
-```{r}
+```{r, fig.width=8}
 thesis_clean %>% 
   filter(year_defense >= 2015,
          year_defense < 2018) %>% 
@@ -347,49 +361,56 @@ thesis_clean %>%
            size = 1,
            arrow = arrow()) +
   
-  labs(title = "Typical year calendar for PhD defenses",
-       subtitle = "Most PhDs begin in autumn, and they have until December three years\nlater to defend, hence the end-of-year peak",
+  labs(title = "Typical year calendar for PhD defenses (2015-2017)",
+       subtitle = "Most PhDs begin in autumn, and they have until December three\nyears later to defend, hence the end-of-year peak",
        x = "Month of defense",
        y = "Number of PhDs",
-       caption = "Source: theses.fr") +
+       caption = "One line = one year\nSource: theses.fr") +
   my_theme
 ```
 
-## Try gganimate
 
-```{r}
-p <- thesis_clean %>% 
-  filter(year_defense < 2018,
-         year_defense > 1989) %>% 
-  group_by(year_defense) %>% 
+## Which days of the week?
+
+
+```{r, fig.width=9}
+thesis_clean %>% 
+  filter(year_defense >= 2010) %>% 
+  mutate(day_defense2 = day(date_defense)) %>% 
+  filter(day_defense2 > 1) %>% 
+  group_by(year_defense,
+           month_defense,
+           day_defense) %>% 
   count() %>% 
-  ggplot(aes(x = year_defense,
-             y = n,
-             group = 1)) +
-  geom_line(size = 3, 
-            colour = bar_col) +
-  # geom_point(size = 3,
-  #            colour = bar_col) +
+  ggplot(aes(x = day_defense, 
+             y = month_defense, 
+             fill = n)) +
+  facet_wrap(~year_defense, ncol = 8) +
+  geom_tile() +
   
-  labs(title = "Number of PhD in France per year",
-       subtitle = "Such a reduction in 2001",
-       caption = "Source: theses.fr",
-       x = "Year of defense",
-       y = "Number of defended PhDs") +
-  ylim(1, 14000) +
-  my_theme +
-
-  transition_reveal(year_defense) + 
-  ease_aes("linear")
-
-animate(p, 
-        nframes = 100, 
-        fps = 10)
+  labs(title = "Distribution of PhD defense over weekdays and months",
+       subtitle = "",
+       x = "Day of the week",
+       y = "Defense month") +
+  
+    scale_fill_gradient(high = bar_col, 
+                      low = title_colour) +
+ my_theme +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.3))
 ```
+
+We see the end-of year patterns, but the most interesting observation in my opinion is that there are PhDs defended during the week ends. That is weird.
+
+
+
 
 
 
 # Ecology and evolution
+
+Since I come from evolutionary ecology, I wanted to have a look at how these fields compare to the pooled data.
 
 ## Get the data
 
@@ -404,25 +425,17 @@ thesis_evology <- thesis_clean %>%
 ```
 
 
-Explore this
 
-```{r}
-thesis_evology %>% 
-  count(discipline, sort = TRUE) %>% kable()
-```
+## Defense over time
 
-
-
-## Timeline
-
-```{r}
+```{r, fig.width=9}
 thesis_evology %>% 
   filter(year_defense >= 1990) %>% 
-    filter(year_defense < 2018) %>% 
   group_by(year_defense) %>% 
   ggplot(aes(x = year_defense)) +
   geom_histogram(binwidth = 1,
-                 fill = bar_col) +
+                 fill   = bar_col,
+                 colour = title_colour) +
   labs(title = "Number of PhD defended in ecology and evolution in France",
        subtitle = "From 1990 to 2017",
        x = "Year of PhD defense",
@@ -432,48 +445,12 @@ thesis_evology %>%
 ```
 
 
+In ecology and evolution, there is also a peak of defenses in December.
 
-```{r}
+
+```{r, fig.width=9}
 thesis_evology %>% 
   filter(year_defense >= 2010) %>% 
-    filter(year_defense < 2018) %>% 
-  mutate(day_defense2 = day(date_defense)) %>% 
-  group_by(year_defense,
-           month_defense,
-           day_defense2) %>% 
-  count() %>% 
-  ggplot(aes(x = month_defense, 
-             y = day_defense2, 
-             fill = n)) +
-  facet_wrap(~year_defense, ncol = 8) +
-  geom_tile() +
-  
-  labs(title = "Distribution of PhD defense over time",
-       subtitle = "",
-       x = "Day of the week",
-       y = "Defense month") +
-  scale_fill_gradient(high = bar_col, 
-                      low = title_colour) +
-  my_theme +
-  theme(axis.text.x = element_text(angle = 90,
-                                   hjust = 1,
-                                   vjust = 0.3))
-```
-
-
-```{r}
-thesis_evology %>% 
-  filter(year_defense == 2010,
-         month_defense == "janvier") %>% 
-  head()
-```
-
-
-Since the first of january 
-```{r}
-thesis_evology %>% 
-  filter(year_defense >= 2010) %>% 
-    filter(year_defense < 2018) %>% 
     mutate(day_defense2 = day(date_defense)) %>% 
   filter(day_defense2 > 1) %>% 
   group_by(year_defense,
@@ -500,10 +477,11 @@ scale_fill_gradient(high = bar_col,
                                    vjust = 0.3))
 ```
 
-```{r}
+However, contrary to the general pattern, very few people defend during the week end, which corresponds to my expectations.
+
+```{r, fig.width=9}
 thesis_evology %>% 
   filter(year_defense >= 2010) %>% 
-    filter(year_defense < 2018) %>% 
   mutate(day_defense2 = day(date_defense)) %>% 
   filter(day_defense2 > 1) %>% 
   group_by(year_defense,
@@ -529,12 +507,12 @@ thesis_evology %>%
                                    vjust = 0.3))
 ```
 
+Three did, but there is nothing indicating that the date was wrong.
 
 ```{r}
 thesis_evology %>% 
   filter(year_defense == 2013,
          day_defense == "dimanche") %>% 
-  view
+  select(author, date_defense) %>% 
+  kable()
 ```
-
-Nothing scandalous.
