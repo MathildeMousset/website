@@ -236,5 +236,5 @@ ggplotly(plot1,
          tooltip = c("x", "y"))
 ```
 
-Here, this is it. Less than two hours, that was the aim for a quick first exploration. Additional bonus: now, I know how to write Reykjavic!
+Here, this is it. Less than two hours from data download to online post, that was my aim for a quick first exploration. Additional bonus: now, I know how to write Reykjavic!
 
