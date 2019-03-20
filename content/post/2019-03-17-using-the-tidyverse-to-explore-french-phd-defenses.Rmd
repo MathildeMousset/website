@@ -463,7 +463,7 @@ thesis_evology %>%
   facet_wrap(~year_defense, ncol = 8) +
   geom_tile() +
   
-  labs(title = "Distribution of PhD defense over time",
+  labs(title = "Distribution of PhD defense in ecology and evolution in France over time",
        subtitle = "",
        x = "Day of the week",
        y = "Defense month") +
@@ -494,7 +494,7 @@ thesis_evology %>%
   facet_wrap(~year_defense, ncol = 8) +
   geom_tile() +
   
-  labs(title = "Distribution of PhD defense over time",
+  labs(title = "Distribution of PhD defense in ecology and evolution in France over time",
        subtitle = "",
        x = "Day of the week",
        y = "Defense month") +
