@@ -12,6 +12,7 @@ tags:
   - data visualisation
   - MakeOverMonday
   - twitter
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -36,7 +37,8 @@ text_colour  <- "grey10"
 title_colour <- "grey10"
 axis_colour  <- "grey10"
 
-bar_col <- "#92070E"
+bar_col1 <- "#5F5293"
+bar_col2 <- "#11073B"
 
 my_theme <- theme(
   # Text in general
@@ -173,7 +175,7 @@ data %>%
   ggplot(aes(x = Country, y = reykjavik_index,
              fill = to_colour,
              #colour = to_colour,
-             label = reykjavik_index)) +
+             label = reykjavik_index)) + 
   
   geom_hline(yintercept = G7_average2,
              size = 1, linetype = "dashed", 
@@ -188,7 +190,6 @@ data %>%
            y = 82,
            size = 5,
            colour = "grey50",
-           #fontface = "bold",
            family = "Roboto Condensed") +
   
   annotate(geom = "text",
@@ -196,8 +197,7 @@ data %>%
            x = "France",
            y = 87,
            size = 3,
-           colour = "#3B9AB2",
-           #fontface = "bold",
+           colour = bar_col1,
            family = "Roboto Condensed") +
   
   annotate(geom = "text",
@@ -205,8 +205,7 @@ data %>%
            x = "Japan",
            y = 87,
            size = 3,
-           colour = "#F21A00",
-           #fontface = "bold",
+           colour = bar_col2,
            family = "Roboto Condensed") +
   
   geom_hline(yintercept = 100,
@@ -224,7 +223,7 @@ data %>%
   my_theme +
   theme(legend.position = "none",
         axis.ticks.y = element_blank()) +
-  scale_fill_manual(values = wes_palette("Zissou1", n = 2, type = "continuous")) -> plot1
+  scale_fill_manual(values = c(bar_col1, bar_col2)) -> plot1
 
 plot1
 ```
