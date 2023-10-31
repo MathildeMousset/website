@@ -77,7 +77,7 @@ tgv$arrival_station %>% unique()
 
 There is a mix of French and European stations. I would like to plot them on a map of Europe, so I need to fetch their GPS coordinates.
 
-I found a [data file]("https://public.opendatasoft.com/explore/dataset/european-train-stations/information/") from [Trainline]("https://www.trainline.fr/"), a train travel agent, with the location of all the stations that are in their database. As they sell French train tickets, the stations in the SNCF dataset should be referenced in their database. I *just* have to join them. 
+I found a [data file](https://github.com/trainline-eu/stations/) from [Trainline](https://www.trainline.fr/), a train travel agent, with the location of all the stations that are in their database. As they sell French train tickets, the stations in the SNCF dataset should be referenced in their database. I *just* have to join them. 
 
 Some text cleaning first: I use the `str_to_title()` function from `stringr` to change all caps to title caps.
 
